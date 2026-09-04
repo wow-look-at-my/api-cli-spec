@@ -46,6 +46,18 @@
 		</xs:restriction>
 	</xs:simpleType>
 
+	<!--
+		A step's or a download's over=: a context path, or a template whose
+		output is read as JSON. The second form is how a config reshapes a
+		fan-out result without leaving the config. A <fields over=> and a
+		<prop over=> are paths only, so they keep the narrower type.
+	-->
+	<xs:simpleType name="overExpr">
+		<xs:restriction base="xs:token">
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+
 	<!-- A Go text/template fragment. It is rendered, never parsed here. -->
 	<xs:simpleType name="template">
 		<xs:restriction base="nonEmpty"/>
@@ -287,7 +299,7 @@
 			<xs:element name="if" type="downloadIf" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="join" type="join" minOccurs="0"/>
 		</xs:all>
-		<xs:attribute name="over" type="path"/>
+		<xs:attribute name="over" type="overExpr"/>
 		<xs:attribute name="when" type="template"/>
 		<xs:attribute name="transport" type="xs:token"/>
 		<!--
@@ -412,9 +424,10 @@
 		</xs:simpleContent>
 	</xs:complexType>
 
+	<!-- over= names the parts of each element, so it needs at least one. -->
 	<xs:complexType name="propOver">
 		<xs:sequence>
-			<xs:element name="field" minOccurs="0" maxOccurs="unbounded">
+			<xs:element name="field" maxOccurs="unbounded">
 				<xs:alternative test="@expr" type="tmlFieldByExpr"/>
 				<xs:alternative type="tmlFieldByPath"/>
 			</xs:element>
@@ -633,7 +646,7 @@
 		</xs:all>
 		<xs:attribute name="name" type="nonEmpty" use="required"/>
 		<xs:attribute name="when" type="template"/>
-		<xs:attribute name="over" type="path"/>
+		<xs:attribute name="over" type="overExpr"/>
 		<!--
 			Polling. The step repeats until until= holds, waiting interval=
 			between tries and giving up after attempts= of them.
