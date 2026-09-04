@@ -1,0 +1,21 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- A polling step, and parts that concatenate into one file per group. -->
+<config name="join-and-poll">
+	<command name="capture" description="Wait for a capture, then fetch and join its parts.">
+		<arg name="id" type="string" required="true" description="Capture id."/>
+		<steps>
+			<step name="job" until="{{ eq .result.job.data.state &quot;done&quot; }}" interval="5s" attempts="60">
+				<run>
+					<request>
+						<url>https://example.invalid/captures/<value name="arg.id"/></url>
+					</request>
+				</run>
+			</step>
+		</steps>
+		<download over="result.job.data.parts" group="{{ .stream }}" order="{{ .index }}">
+			<url><value name="item.url"/></url>
+			<to>parts/<value name="item.stream"/>-<value name="item.index"/>.ts</to>
+			<join to="out/{{ .stream }}.ts" cleanup="true" contiguous="error"/>
+		</download>
+	</command>
+</config>

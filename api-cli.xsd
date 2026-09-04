@@ -285,11 +285,40 @@
 			<!-- Every <cookie> folds into one Cookie header. -->
 			<xs:element name="cookie" type="header" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="if" type="downloadIf" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="join" type="join" minOccurs="0"/>
 		</xs:all>
 		<xs:attribute name="over" type="path"/>
 		<xs:attribute name="when" type="template"/>
 		<xs:attribute name="transport" type="xs:token"/>
+		<!--
+			The bucket a part joins, and its place in that bucket. Both are
+			templates over the record, and both describe a <join>, so a
+			declaration that carries either one without a <join> fails the load.
+			order= is read as a number: a capture numbers its parts 2, 3, 10,
+			and a lexical sort puts 10 first.
+		-->
+		<xs:attribute name="group" type="template"/>
+		<xs:attribute name="order" type="template"/>
 	</xs:complexType>
+
+	<!--
+		The one file a group of parts becomes. Each member still needs its own
+		<to>, so the parts land separately and the join concatenates them.
+		contiguous= reports a gap in the numeric order, and it reads the numbers
+		order= gives.
+	-->
+	<xs:complexType name="join">
+		<xs:attribute name="to" type="template" use="required"/>
+		<xs:attribute name="cleanup" type="bool"/>
+		<xs:attribute name="contiguous" type="joinGap"/>
+	</xs:complexType>
+
+	<xs:simpleType name="joinGap">
+		<xs:restriction base="xs:token">
+			<xs:enumeration value="warn"/>
+			<xs:enumeration value="error"/>
+		</xs:restriction>
+	</xs:simpleType>
 
 	<xs:complexType name="downloadIf">
 		<xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -605,6 +634,13 @@
 		<xs:attribute name="name" type="nonEmpty" use="required"/>
 		<xs:attribute name="when" type="template"/>
 		<xs:attribute name="over" type="path"/>
+		<!--
+			Polling. The step repeats until until= holds, waiting interval=
+			between tries and giving up after attempts= of them.
+		-->
+		<xs:attribute name="until" type="template"/>
+		<xs:attribute name="interval" type="xs:token"/>
+		<xs:attribute name="attempts" type="xs:integer"/>
 	</xs:complexType>
 
 	<xs:element name="steps">

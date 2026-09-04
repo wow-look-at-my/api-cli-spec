@@ -36,7 +36,7 @@ Element content mixes text with three placeholders, which compile to Go template
 - `<if test="path" eq="literal">...<else/>...</if>` branches.
 - `<for each="path">...</for>` repeats, rebinding `.` to each element.
 
-`examples/valid/` is the tour: `minimal`, `placeholders`, `request`, `transports`, `downloads`, `fields`, `tml`, `formats`, `tree`, and `unordered`.
+`examples/valid/` is the tour: `minimal`, `placeholders`, `request`, `transports`, `downloads`, `join-and-poll`, `fields`, `tml`, `formats`, `tree`, and `unordered`.
 
 ## Child elements are order-free
 
@@ -59,6 +59,8 @@ These rules hold, and api-cli reports each one at load time. XSD reaches an elem
 | `<download>`, `<fields>`, `<steps>`, `<entry>` and `<preconditions>` need a node that runs | They read whether the node has subcommands. |
 | `<fields>` and `<format>`, or `<tml>` and `<fields>`, are exclusive | Two sibling elements, not one element's attributes. |
 | `<download>` takes neither `<fields>` nor `<format>` | The same. |
+| `group=` and `order=` need a `<join>` | An attribute and a child element of the same node. |
+| `<join contiguous=>` needs `order=`, and a joined part needs its own `<to>` | The same. |
 | `runnable="true"` needs subcommands, and each of its args needs a `pattern=` | It reads the node's children. |
 | An arg `pattern=` compiles, and matches no subcommand name | It reads the sibling commands, and it runs a regular expression engine. |
 | `passthrough="true"` is leaf-only, and takes no args | It reads the node's children. |
