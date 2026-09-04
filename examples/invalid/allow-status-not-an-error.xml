@@ -1,0 +1,11 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- rejects: attribute "allow-status" on element "request": value "200" does not match pattern -->
+<config name="x">
+	<command name="c">
+		<run>
+			<request allow-status="200">
+				<url>https://example.invalid/a</url>
+			</request>
+		</run>
+	</command>
+</config>

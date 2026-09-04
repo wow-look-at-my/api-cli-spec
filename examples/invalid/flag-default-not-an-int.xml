@@ -1,0 +1,8 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- rejects: attribute "default" on element "flag": "deep" is not a valid integer -->
+<config name="x">
+	<command name="c">
+		<flag name="depth" type="int" default="deep"/>
+		<run>x</run>
+	</command>
+</config>

@@ -1,0 +1,12 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- rejects: attribute "name" on element "transport": value "http" does not match pattern -->
+<config name="x">
+	<transports>
+		<transport name="http">
+			<run>curl</run>
+		</transport>
+	</transports>
+	<command name="c">
+		<run>x</run>
+	</command>
+</config>

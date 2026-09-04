@@ -1,0 +1,11 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- rejects: element "request" requires at least 1 occurrence(s) of "url" -->
+<config name="x">
+	<command name="c">
+		<run>
+			<request method="POST">
+				<body>{}</body>
+			</request>
+		</run>
+	</command>
+</config>

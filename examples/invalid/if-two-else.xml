@@ -1,0 +1,7 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- rejects: unexpected element "else" in element "if" -->
+<config name="x">
+	<command name="c">
+		<run>echo <if test="flag.a">a<else/>b<else/>c</if></run>
+	</command>
+</config>

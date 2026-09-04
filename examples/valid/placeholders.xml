@@ -1,0 +1,18 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- Every placeholder form api-dsl compiles, including a nested one. -->
+<config name="placeholders">
+	<vars>
+		<var name="base">https://example.invalid</var>
+		<var name="greeting">hello <value name="var.who" default="world"/></var>
+	</vars>
+	<command name="say">
+		<flag name="who" type="string" default="world" description="Who to greet."/>
+		<flag name="loud" type="bool" default="false" description="Shout it."/>
+		<run>
+			echo <value name="var.greeting" as="shellquote"/>
+			<if test="flag.loud"> | tr a-z A-Z<else/> | cat</if>
+			<if test="flag.who" eq="world"> # the default</if>
+			<for each="var.list"><value expr="{{ . }}"/> </for>
+		</run>
+	</command>
+</config>

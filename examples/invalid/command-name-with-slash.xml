@@ -1,0 +1,7 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- rejects: attribute "name" on element "command": value "repo/list" does not match pattern -->
+<config name="x">
+	<command name="repo/list">
+		<run>x</run>
+	</command>
+</config>

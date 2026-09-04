@@ -1,0 +1,7 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- rejects: required attribute "name" is missing on element "value" -->
+<config name="x">
+	<command name="c">
+		<run>echo <value default="fallback"/></run>
+	</command>
+</config>

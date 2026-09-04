@@ -1,0 +1,15 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- rejects: xs:unique "stepName" -->
+<config name="x">
+	<command name="c">
+		<steps>
+			<step name="one">
+				<run>a</run>
+			</step>
+			<step name="one">
+				<run>b</run>
+			</step>
+		</steps>
+		<run>x</run>
+	</command>
+</config>

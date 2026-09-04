@@ -1,0 +1,12 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- rejects: xs:unique "subcommandName" -->
+<config name="x">
+	<command name="repo">
+		<command name="list">
+			<run>a</run>
+		</command>
+		<command name="list">
+			<run>b</run>
+		</command>
+	</command>
+</config>

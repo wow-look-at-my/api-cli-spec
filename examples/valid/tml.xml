@@ -1,0 +1,20 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- A screen: one prop of each of the three kinds. -->
+<config name="tml">
+	<command name="board" description="Draw the queue as a board.">
+		<run>
+			<request>
+				<url>https://example.invalid/queue</url>
+			</request>
+		</run>
+		<tml src="ui/board.tml" dark="true">
+			<prop name="title">Queue for <value name="var.env"/></prop>
+			<prop name="total" from="data.count"/>
+			<prop name="cards" over="data.items">
+				<field name="id">id</field>
+				<field name="tail" lines="true" last="3" truncate="60">log</field>
+				<field name="label" expr="{{ .name }} ({{ .state }})"/>
+			</prop>
+		</tml>
+	</command>
+</config>

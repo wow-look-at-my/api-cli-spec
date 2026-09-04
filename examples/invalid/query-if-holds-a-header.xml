@@ -1,0 +1,16 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- rejects: unexpected element "header" in element "if" -->
+<config name="x">
+	<command name="c">
+		<run>
+			<request>
+				<url>https://example.invalid/a</url>
+				<query>
+					<if test="flag.a">
+						<header name="X-A">1</header>
+					</if>
+				</query>
+			</request>
+		</run>
+	</command>
+</config>

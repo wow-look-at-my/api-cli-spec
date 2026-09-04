@@ -1,0 +1,8 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- rejects: attribute "concurrency" on element "downloads": "lots" is not a valid integer -->
+<config name="x">
+	<downloads concurrency="lots"/>
+	<command name="c">
+		<run>x</run>
+	</command>
+</config>
