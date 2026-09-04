@@ -180,7 +180,7 @@
 
 	<xs:complexType name="headerIf">
 		<xs:sequence>
-			<xs:element name="header" type="header" maxOccurs="unbounded"/>
+			<xs:element name="header" type="header" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 		<xs:attribute name="test" type="path" use="required"/>
 	</xs:complexType>
@@ -195,7 +195,7 @@
 
 	<xs:complexType name="paramIf">
 		<xs:sequence>
-			<xs:element name="param" type="header" maxOccurs="unbounded"/>
+			<xs:element name="param" type="header" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 		<xs:attribute name="test" type="path" use="required"/>
 	</xs:complexType>
@@ -214,9 +214,16 @@
 			<xs:element name="cwd" type="content" minOccurs="0"/>
 			<xs:element name="stdin" type="content" minOccurs="0"/>
 		</xs:all>
-		<xs:attribute name="name" type="nonEmpty" use="required"/>
+		<xs:attribute name="name" type="transportName" use="required"/>
 		<xs:attribute name="default" type="bool"/>
 	</xs:complexType>
+
+	<!-- "http" names the built-in client, so a program may not take the name. -->
+	<xs:simpleType name="transportName">
+		<xs:restriction base="nonEmpty">
+			<xs:pattern value="[^h].*|h|h[^t].*|ht|ht[^t].*|htt|htt[^p].*|http.+"/>
+		</xs:restriction>
+	</xs:simpleType>
 
 	<xs:complexType name="runCommand" mixed="true">
 		<xs:choice minOccurs="0">
@@ -228,7 +235,7 @@
 	<xs:element name="transports">
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element name="transport" type="transport" maxOccurs="unbounded"/>
+				<xs:element name="transport" type="transport" minOccurs="0" maxOccurs="unbounded"/>
 			</xs:sequence>
 		</xs:complexType>
 		<xs:unique name="transportName">
@@ -251,12 +258,10 @@
 		<xs:attribute name="dir" type="nonEmpty"/>
 	</xs:complexType>
 
+	<!-- The loader lowercases algo=, so every casing of the four names loads. -->
 	<xs:simpleType name="hashAlgo">
 		<xs:restriction base="xs:token">
-			<xs:enumeration value="md5"/>
-			<xs:enumeration value="sha1"/>
-			<xs:enumeration value="sha256"/>
-			<xs:enumeration value="sha512"/>
+			<xs:pattern value="[Mm][Dd]5|[Ss][Hh][Aa]1|[Ss][Hh][Aa]256|[Ss][Hh][Aa]512"/>
 		</xs:restriction>
 	</xs:simpleType>
 
@@ -287,7 +292,7 @@
 	</xs:complexType>
 
 	<xs:complexType name="downloadIf">
-		<xs:choice maxOccurs="unbounded">
+		<xs:choice minOccurs="0" maxOccurs="unbounded">
 			<xs:element name="header" type="header"/>
 			<xs:element name="cookie" type="header"/>
 		</xs:choice>
@@ -380,7 +385,7 @@
 
 	<xs:complexType name="propOver">
 		<xs:sequence>
-			<xs:element name="field" maxOccurs="unbounded">
+			<xs:element name="field" minOccurs="0" maxOccurs="unbounded">
 				<xs:alternative test="@expr" type="tmlFieldByExpr"/>
 				<xs:alternative type="tmlFieldByPath"/>
 			</xs:element>
@@ -452,7 +457,7 @@
 	<xs:element name="formats">
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element ref="format" maxOccurs="unbounded"/>
+				<xs:element ref="format" minOccurs="0" maxOccurs="unbounded"/>
 			</xs:sequence>
 		</xs:complexType>
 		<xs:unique name="formatName">
@@ -514,21 +519,50 @@
 		</xs:restriction>
 	</xs:simpleType>
 
-	<xs:complexType name="flag">
+	<!--
+		default= is read as the flag's own type, so an int flag defaulting to
+		"notanint" fails the load. The branches below check it here instead:
+		one per type that parses its default, and a string default for the rest.
+		A string-slice default is a comma-separated list, which is any string.
+	-->
+	<xs:complexType name="flagAttrs">
 		<xs:attribute name="name" type="flagName" use="required"/>
 		<xs:attribute name="short" type="shortFlag"/>
 		<xs:attribute name="type" type="flagType"/>
-		<xs:attribute name="default" type="xs:string"/>
 		<xs:attribute name="required" type="bool"/>
 		<!-- A comma-separated list of flag names on the same node. -->
 		<xs:attribute name="conflicts" type="xs:token"/>
 		<xs:attribute name="description" type="xs:string"/>
 	</xs:complexType>
 
+	<xs:complexType name="flagOfInt">
+		<xs:complexContent>
+			<xs:extension base="flagAttrs">
+				<xs:attribute name="default" type="xs:integer"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="flagOfBool">
+		<xs:complexContent>
+			<xs:extension base="flagAttrs">
+				<xs:attribute name="default" type="bool"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="flagOfString">
+		<xs:complexContent>
+			<xs:extension base="flagAttrs">
+				<xs:attribute name="default" type="xs:string"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
 	<xs:element name="vars">
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element name="var" maxOccurs="unbounded">
+				<xs:element name="var" minOccurs="0" maxOccurs="unbounded">
 					<xs:complexType mixed="true">
 						<xs:group ref="placeholders" minOccurs="0" maxOccurs="unbounded"/>
 						<xs:attribute name="name" type="path" use="required"/>
@@ -544,7 +578,7 @@
 
 	<xs:complexType name="preconditions">
 		<xs:sequence>
-			<xs:element name="precondition" type="content" maxOccurs="unbounded"/>
+			<xs:element name="precondition" type="content" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -576,7 +610,7 @@
 	<xs:element name="steps">
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element name="step" type="step" maxOccurs="unbounded"/>
+				<xs:element name="step" type="step" minOccurs="0" maxOccurs="unbounded"/>
 			</xs:sequence>
 		</xs:complexType>
 		<xs:unique name="stepName">
@@ -587,17 +621,55 @@
 
 	<!-- ===== 9. The command tree ===== -->
 
-	<xs:simpleType name="commandName">
+	<!--
+		A command name carries no whitespace and no slash, and it is none of the
+		four names cobra owns. Each step below removes one reserved name, and a
+		restriction of a restriction enforces the patterns it inherits as well
+		as the one it states, so the five patterns hold together.
+
+		One pattern reads: anything whose first character is not the word's
+		first, or that stops at each prefix of the word, or that diverges at
+		some later character, or that carries the whole word and more.
+	-->
+	<xs:simpleType name="nameChars">
 		<xs:restriction base="xs:token">
 			<xs:minLength value="1"/>
 			<xs:pattern value="[^\s/]+"/>
 		</xs:restriction>
 	</xs:simpleType>
 
+	<xs:simpleType name="notHelp">
+		<xs:restriction base="nameChars">
+			<xs:pattern value="[^h].*|h|h[^e].*|he|he[^l].*|hel|hel[^p].*|help.+"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="notDocs">
+		<xs:restriction base="notHelp">
+			<xs:pattern value="[^d].*|d|d[^o].*|do|do[^c].*|doc|doc[^s].*|docs.+"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="notCompletion">
+		<xs:restriction base="notDocs">
+			<xs:pattern value="[^c].*|c|c[^o].*|co|co[^m].*|com|com[^p].*|comp|comp[^l].*|compl|compl[^e].*|comple|comple[^t].*|complet|complet[^i].*|completi|completi[^o].*|completio|completio[^n].*|completion.+"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="commandName">
+		<xs:restriction base="notCompletion">
+			<xs:pattern value="[^_].*|_|_[^_].*|__|__[^c].*|__c|__c[^o].*|__co|__co[^m].*|__com|__com[^p].*|__comp|__comp[^l].*|__compl|__compl[^e].*|__comple|__comple[^t].*|__complet|__complet[^e].*|__complete.+"/>
+		</xs:restriction>
+	</xs:simpleType>
+
 	<xs:complexType name="command">
 		<xs:all>
 			<xs:element name="arg" type="arg" minOccurs="0" maxOccurs="unbounded"/>
-			<xs:element name="flag" type="flag" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="flag" minOccurs="0" maxOccurs="unbounded">
+				<xs:alternative test="@type = 'int'" type="flagOfInt"/>
+				<xs:alternative test="@type = 'bool'" type="flagOfBool"/>
+				<xs:alternative type="flagOfString"/>
+			</xs:element>
 			<xs:element ref="vars" minOccurs="0"/>
 			<xs:element name="run" type="run" minOccurs="0"/>
 			<xs:element name="cwd" type="content" minOccurs="0"/>
