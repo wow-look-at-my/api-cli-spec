@@ -10,14 +10,14 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            # dats sandboxes every test command, and bubblewrap is the backend
-            # it reaches for first. Without one it refuses to run at all.
-            - run: sudo apt-get update && sudo apt-get install -y bubblewrap
+            # The suite is TypeScript, which node runs directly from 22.18 on.
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
 
-            - name: install xml-validator and dats
+            - name: install xml-validator
               run: |
                   curl -fsSL https://apt.pazer.build/xml-validator/install.sh | sudo sh
-                  curl -fsSL https://apt.pazer.build/dats/install.sh | sudo sh
-                  sudo apt-get install -y xml-validator dats
+                  sudo apt-get install -y xml-validator
 
-            - run: dats dats/
+            - run: node tools/check.ts

@@ -11,21 +11,20 @@
 // rejects everything reads as complete coverage.
 //
 // The whole directory drives the run, so a fixture nobody named cannot exist.
-import { readdirSync, readFileSync } from "node:fs";
+//
+// The controls at the bottom run first, every time. Each builds a small tree
+// that breaks one property and demands the failure. A checker that cannot go
+// red reports a green specification whatever the schema says.
+import { readdirSync, readFileSync, mkdirSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 
-// The tree to check. It defaults to the working directory, and a negative
-// control passes a small tree of its own to prove this program can fail.
-const root = process.argv[2] ?? ".";
 const validator = process.env.XML_VALIDATOR ?? "xml-validator";
-const schema = join(root, "api-cli.xsd");
 
 type Failure = { file: string; why: string };
-const failures: Failure[] = [];
-let checked = 0;
 
-function validate(file: string): { ok: boolean; output: string } {
+function validate(schema: string, file: string): { ok: boolean; output: string } {
 	const r = spawnSync(validator, ["--schema", schema, file], { encoding: "utf8" });
 	if (r.error) throw new Error(`cannot run ${validator}: ${r.error.message}`);
 	return { ok: r.status === 0, output: `${r.stdout}${r.stderr}`.trim() };
@@ -37,39 +36,96 @@ function fixtures(dir: string): string[] {
 	return names.map((n) => join(dir, n));
 }
 
-// The schema is itself a document this validator reads.
-{
-	const r = spawnSync(validator, [schema], { encoding: "utf8" });
-	if (r.status !== 0) {
-		failures.push({ file: schema, why: `the schema is not a valid XML 1.1 document: ${r.stderr.trim()}` });
+// checkTree reports everything wrong with one specification tree, and how many
+// documents it read to find out.
+function checkTree(root: string): { failures: Failure[]; checked: number } {
+	const failures: Failure[] = [];
+	let checked = 0;
+	const schema = join(root, "api-cli.xsd");
+
+	const wellFormed = spawnSync(validator, [schema], { encoding: "utf8" });
+	if (wellFormed.status !== 0) {
+		failures.push({ file: schema, why: `the schema is not a valid XML 1.1 document: ${wellFormed.stderr.trim()}` });
+	}
+
+	for (const file of fixtures(join(root, "examples/valid"))) {
+		checked++;
+		const { ok, output } = validate(schema, file);
+		if (!ok) failures.push({ file, why: `must validate, and did not: ${output}` });
+	}
+
+	for (const file of fixtures(join(root, "examples/invalid"))) {
+		checked++;
+		const declared = /<!--\s*rejects:\s*(.+?)\s*-->/.exec(readFileSync(file, "utf8"));
+		if (!declared) {
+			failures.push({ file, why: "no <!-- rejects: ... --> comment, so nothing says why it must fail" });
+			continue;
+		}
+		const want = declared[1];
+		const { ok, output } = validate(schema, file);
+		if (ok) {
+			failures.push({ file, why: `must be rejected for ${JSON.stringify(want)}, and validated instead` });
+		} else if (!output.includes(want)) {
+			failures.push({ file, why: `rejected for the wrong reason.\n    want: ${want}\n    got:  ${output}` });
+		}
+	}
+	return { failures, checked };
+}
+
+// A schema small enough to read at a glance, for the controls.
+const TOY_SCHEMA = `<?xml version="1.1" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+\t<xs:element name="config">
+\t\t<xs:complexType>
+\t\t\t<xs:attribute name="name" use="required"/>
+\t\t</xs:complexType>
+\t</xs:element>
+</xs:schema>
+`;
+const OPEN_SCHEMA = TOY_SCHEMA.replace('<xs:attribute name="name" use="required"/>', "<xs:anyAttribute/>");
+const DECL = '<?xml version="1.1" encoding="UTF-8"?>';
+
+// control returns null when the checker caught the break, and the complaint
+// when it did not.
+function control(name: string, schema: string, valid: string, invalid: string, want: string): string | null {
+	const root = mkdtempSync(join(tmpdir(), "api-cli-spec-"));
+	try {
+		mkdirSync(join(root, "examples/valid"), { recursive: true });
+		mkdirSync(join(root, "examples/invalid"), { recursive: true });
+		writeFileSync(join(root, "api-cli.xsd"), schema);
+		writeFileSync(join(root, "examples/valid/a.xml"), valid);
+		writeFileSync(join(root, "examples/invalid/b.xml"), invalid);
+		const { failures } = checkTree(root);
+		if (failures.some((f) => f.why.includes(want))) return null;
+		const saw = JSON.stringify(failures.map((f) => f.why));
+		return `${name}: expected a failure mentioning ${JSON.stringify(want)}, saw ${saw}`;
+	} finally {
+		rmSync(root, { recursive: true, force: true });
 	}
 }
 
-for (const file of fixtures(join(root, "examples/valid"))) {
-	checked++;
-	const { ok, output } = validate(file);
-	if (!ok) failures.push({ file, why: `must validate, and did not: ${output}` });
+const good = `${DECL}\n<config name="x"/>\n`;
+const rejected = `${DECL}\n<!-- rejects: unexpected attribute "nope" on element "config" -->\n<config name="x" nope="1"/>\n`;
+const undeclared = `${DECL}\n<config name="x" nope="1"/>\n`;
+const wrongReason = `${DECL}\n<!-- rejects: a reason this document never produces -->\n<config name="x" nope="1"/>\n`;
+
+const broken = [
+	control("a valid fixture the schema rejects", TOY_SCHEMA, `${DECL}\n<config/>\n`, rejected, "must validate, and did not"),
+	control("an invalid fixture with no declared reason", TOY_SCHEMA, good, undeclared, "no <!-- rejects: ... --> comment"),
+	control("an invalid fixture rejected for the wrong reason", TOY_SCHEMA, good, wrongReason, "rejected for the wrong reason"),
+	control("an invalid fixture the schema accepts", OPEN_SCHEMA, good, rejected, "and validated instead"),
+].filter((c): c is string => c !== null);
+
+if (broken.length > 0) {
+	for (const b of broken) console.error(`BROKEN ${b}`);
+	console.error("\nthis checker cannot report the failures it exists to report");
+	process.exit(1);
 }
 
-for (const file of fixtures(join(root, "examples/invalid"))) {
-	checked++;
-	const declared = /<!--\s*rejects:\s*(.+?)\s*-->/.exec(readFileSync(file, "utf8"));
-	if (!declared) {
-		failures.push({ file, why: "no <!-- rejects: ... --> comment, so nothing says why it must fail" });
-		continue;
-	}
-	const want = declared[1];
-	const { ok, output } = validate(file);
-	if (ok) {
-		failures.push({ file, why: `must be rejected for ${JSON.stringify(want)}, and validated instead` });
-	} else if (!output.includes(want)) {
-		failures.push({ file, why: `rejected for the wrong reason.\n    want: ${want}\n    got:  ${output}` });
-	}
-}
-
+const { failures, checked } = checkTree(process.argv[2] ?? ".");
 for (const f of failures) console.error(`FAIL ${f.file}: ${f.why}`);
 if (failures.length > 0) {
 	console.error(`\n${failures.length} of ${checked} fixtures failed`);
 	process.exit(1);
 }
-console.log(`ok: ${checked} fixtures`);
+console.log(`ok: 4 controls, ${checked} fixtures`);

@@ -2,7 +2,7 @@
 
 The specification of the XML configuration language that [api-cli](https://github.com/wow-look-at-my/api-cli) loads.
 
-`api-cli.xsd` is the schema. `examples/` holds the documents that prove it. `tools/check.ts` is the suite, and `dats/spec.dats` runs it.
+`api-cli.xsd` is the schema. `examples/` holds the documents that prove it. `tools/check.ts` is the suite.
 
 ## Check a document
 
@@ -15,7 +15,7 @@ xml-validator --schema api-cli.xsd path/to/api.xml
 ## Run the suite
 
 ```sh
-dats dats/
+node tools/check.ts
 ```
 
 Every document under `examples/valid` must validate. Every document under `examples/invalid` must be rejected, for the reason it states in its own comment:
@@ -24,7 +24,7 @@ Every document under `examples/valid` must validate. Every document under `examp
 <!-- rejects: attribute "type" on element "flag": value "date" is not one of the allowed values -->
 ```
 
-The declared reason is what makes a rejection fixture a test. A document rejected for some other reason fails the suite, so a schema that refuses everything cannot read as complete coverage. The checker walks the whole directory, so a fixture nobody named cannot exist. Four negative controls in `dats/spec.dats` each break one property and demand the failure. A checker that cannot go red reports a green specification whatever the schema says.
+The declared reason is what makes a rejection fixture a test. A document rejected for some other reason fails the suite, so a schema that refuses everything cannot read as complete coverage. The checker walks the whole directory, so a fixture nobody named cannot exist. It also runs four controls first, every time. Each builds a small tree that breaks one property and demands the failure. A checker that cannot go red reports a green specification whatever the schema says.
 
 ## What the language looks like
 
