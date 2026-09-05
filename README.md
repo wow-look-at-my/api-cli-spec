@@ -2,7 +2,7 @@
 
 The specification of the api-cli XML configuration language. This repository is the authoritative source of truth for the language. An implementation conforms to it, and it never derives from an implementation.
 
-`api-cli.xsd` is the schema. `examples/` holds the documents that prove it. `tools/check.ts` is the suite.
+`api-cli.xsd` says what a document may contain. `resolved.xsd` says what a reader must work out from one. `examples/valid/` holds a worked document per feature, `examples/resolved/` holds each one's resolved form, and `tools/check.ts` is the suite.
 
 ## Check a document
 
@@ -18,11 +18,30 @@ xml-validator --schema api-cli.xsd path/to/api.xml
 node tools/check.ts
 ```
 
-The schema must parse, and every document under `examples/valid` must validate against it. The checker walks the whole directory, so a fixture nobody named cannot exist.
+Both schemas must parse. Every document under `examples/valid` must validate against `api-cli.xsd`, and its resolved form under `examples/resolved` must validate against `resolved.xsd`. The two directories pair by filename, and a file on either side with no partner fails the run. The checker walks both directories, so a fixture nobody named cannot exist.
 
 There is no rejection corpus, on purpose. A document the schema refuses states nothing the schema does not already state itself. It is the same rule written twice in two files. Nothing loosens an `xs:element` by accident either. An XSD is declarative and hand-written, so a rule changes only when somebody changes it, deliberately. A fixture pinned against that fires exactly when the spec moved on purpose. The answer is then always to delete the fixture.
 
-What `examples/valid` carries is what a schema cannot state about itself: a worked document per feature of the language, written to be read. The schema says what is legal. These say what the language looks like when somebody writes it.
+What `examples/valid` carries is what a schema cannot state about itself: a worked document per feature of the language, written to be read.
+
+## Conformance
+
+An example on its own says what a document may look like. It never says what the document means, and meaning is the part two readers disagree about. `examples/resolved/` closes that: for each example, the tree a reader must arrive at.
+
+An implementation reads an example, emits its resolved form, and compares. The comparison is on the values, and attribute order and whitespace carry nothing. A conformance suite therefore lives here, in the specification, rather than beside one reader where it drifts from every other.
+
+## Resolution
+
+A document states each setting where an author wrote it. A command's effective settings come from walking its ancestors, so the answer appears in no single place in the source. These are the rules that produce `examples/resolved/`.
+
+- **A node runs** when it is a leaf, or when it declares `runnable="true"`.
+- **`<run>`, `<cwd>`, `<stdin>`, `<confirm>` and `<format>` inherit.** A node's effective value is its own declaration, or the nearest ancestor's, or none. The document root is an ancestor of every top-level command.
+- **A `<run>` replaces an inherited one entirely.** It is one of three things, and the nearest declaration decides which.
+- **A `<download>` node needs no run.** Its declarations are the action, and they follow the node's steps.
+- **A `<transport>` owns its `<cwd>` and `<stdin>`.** Those belong to the transport's program, and no command inherits them.
+- **A var or a flag is visible to the node that declares it and to that node's descendants.** `examples/valid/tree.xml` reads a parent's var from a child, so the corpus already commits to this.
+
+A resolved file names the node each winning value came from. That is what a reader has to get right. It is also the one thing the source document never writes down.
 
 ## What the language looks like
 

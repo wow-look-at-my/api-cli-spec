@@ -1,0 +1,88 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!--
+	The resolved form of a document.
+
+	api-cli.xsd says what a document may contain. This says what a reader must
+	work out from one. A document states each setting where an author wrote it,
+	and a command's effective settings come from walking its ancestors, so the
+	answer appears in no single place in the source.
+
+	examples/resolved/ holds this form for every document under examples/valid/,
+	and README.md states the rules that produce it. An implementation reads a
+	document, emits this, and compares. The comparison is on the values, not on
+	the bytes: attribute order and whitespace carry nothing here.
+
+	A path names a node. "/" is the document root, and "/repo/list" is the
+	command "list" inside the command "repo".
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+	<xs:simpleType name="path">
+		<xs:restriction base="xs:token">
+			<xs:pattern value="/|(/[^/]+)+"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!-- The three things a <run> can be. A reader reports which one won. -->
+	<xs:simpleType name="runKind">
+		<xs:restriction base="xs:token">
+			<xs:enumeration value="shell"/>
+			<xs:enumeration value="argv"/>
+			<xs:enumeration value="request"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!--
+		An inherited setting. from= is the node that declared the winning value,
+		which is the node itself when it declares one.
+	-->
+	<xs:complexType name="inherited">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="from" type="path" use="required"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+
+	<xs:complexType name="inheritedRun">
+		<xs:attribute name="from" type="path" use="required"/>
+		<xs:attribute name="kind" type="runKind" use="required"/>
+	</xs:complexType>
+
+	<xs:complexType name="marker">
+		<xs:attribute name="from" type="path" use="required"/>
+	</xs:complexType>
+
+	<!--
+		One node of the command tree. A node with no <run> child inherits none:
+		that is a document a reader must reject when the node runs, and the
+		absence is the finding.
+	-->
+	<xs:complexType name="command">
+		<xs:all>
+			<xs:element name="run" type="inheritedRun" minOccurs="0"/>
+			<xs:element name="cwd" type="inherited" minOccurs="0"/>
+			<xs:element name="stdin" type="marker" minOccurs="0"/>
+			<xs:element name="confirm" type="marker" minOccurs="0"/>
+			<xs:element name="format" type="marker" minOccurs="0"/>
+		</xs:all>
+		<xs:attribute name="path" type="path" use="required"/>
+		<!-- True for a leaf, and for a parent that declares runnable="true". -->
+		<xs:attribute name="runs" type="xs:boolean" use="required"/>
+	</xs:complexType>
+
+	<xs:element name="resolved">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="command" type="command" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<!-- The document's own name=, so a file cannot drift from its source. -->
+			<xs:attribute name="config" type="xs:token" use="required"/>
+		</xs:complexType>
+		<xs:unique name="commandPath">
+			<xs:selector xpath="command"/>
+			<xs:field xpath="@path"/>
+		</xs:unique>
+	</xs:element>
+
+</xs:schema>

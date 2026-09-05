@@ -1,14 +1,15 @@
 // The specification's test suite.
 //
-// The schema must parse, and every document under examples/valid must validate
-// against it. The whole directory drives the run, so a fixture nobody named
-// cannot exist.
+// Both schemas must parse. Every document under examples/valid must validate
+// against api-cli.xsd, and its resolved form under examples/resolved must
+// validate against resolved.xsd. The two directories pair by name, and a file
+// on one side with no partner on the other fails the run: an example with no
+// resolved form states what a document may say and never what it means.
 //
 // There is no rejection corpus. A document the schema refuses states nothing
 // the schema does not already state itself, so it is the same rule written
-// twice in two files. What examples/valid carries is what a schema cannot
-// state about itself: one worked document per feature, written to be read.
-import { readdirSync } from "node:fs";
+// twice in two files.
+import { readdirSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 
@@ -25,7 +26,14 @@ function validate(schema: string, file: string): { ok: boolean; output: string }
 function fixtures(dir: string): string[] {
 	const names = readdirSync(dir).filter((n) => n.endsWith(".xml")).sort();
 	if (names.length === 0) throw new Error(`${dir} holds no fixtures`);
-	return names.map((n) => join(dir, n));
+	return names;
+}
+
+// A document's name= and its resolved form's config= must agree, so a resolved
+// file cannot quietly describe a document other than the one it is paired with.
+function configName(text: string): string | null {
+	const m = /<(?:config|resolved)\b[^>]*\bname="([^"]*)"/.exec(text) ?? /<resolved\b[^>]*\bconfig="([^"]*)"/.exec(text);
+	return m ? m[1] : null;
 }
 
 // checkTree reports everything wrong with one specification tree, and how many
@@ -33,17 +41,48 @@ function fixtures(dir: string): string[] {
 function checkTree(root: string): { failures: Failure[]; checked: number } {
 	const failures: Failure[] = [];
 	let checked = 0;
-	const schema = join(root, "api-cli.xsd");
+	const schemas = { source: join(root, "api-cli.xsd"), resolved: join(root, "resolved.xsd") };
 
-	const wellFormed = spawnSync(validator, [schema], { encoding: "utf8" });
-	if (wellFormed.status !== 0) {
-		failures.push({ file: schema, why: `the schema is not a valid XML 1.1 document: ${wellFormed.stderr.trim()}` });
+	for (const schema of Object.values(schemas)) {
+		const wellFormed = spawnSync(validator, [schema], { encoding: "utf8" });
+		if (wellFormed.status !== 0) {
+			failures.push({ file: schema, why: `the schema is not a valid XML 1.1 document: ${wellFormed.stderr.trim()}` });
+		}
 	}
 
-	for (const file of fixtures(join(root, "examples/valid"))) {
+	const validDir = join(root, "examples/valid");
+	const resolvedDir = join(root, "examples/resolved");
+	const sources = fixtures(validDir);
+	const resolved = new Set(fixtures(resolvedDir));
+
+	for (const name of resolved) {
+		if (!sources.includes(name)) {
+			failures.push({ file: join(resolvedDir, name), why: `no examples/valid/${name} to resolve` });
+		}
+	}
+
+	for (const name of sources) {
 		checked++;
-		const { ok, output } = validate(schema, file);
-		if (!ok) failures.push({ file, why: `must validate, and did not: ${output}` });
+		const source = join(validDir, name);
+		const got = validate(schemas.source, source);
+		if (!got.ok) failures.push({ file: source, why: `must validate, and did not: ${got.output}` });
+
+		if (!resolved.has(name)) {
+			failures.push({ file: source, why: `no examples/resolved/${name}, so nothing states what it means` });
+			continue;
+		}
+		checked++;
+		const target = join(resolvedDir, name);
+		const out = validate(schemas.resolved, target);
+		if (!out.ok) {
+			failures.push({ file: target, why: `must validate, and did not: ${out.output}` });
+			continue;
+		}
+		const want = configName(readFileSync(source, "utf8"));
+		const have = configName(readFileSync(target, "utf8"));
+		if (want !== have) {
+			failures.push({ file: target, why: `config="${have}" names a document other than "${want}"` });
+		}
 	}
 	return { failures, checked };
 }

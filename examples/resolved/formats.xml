@@ -1,0 +1,16 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!--
+	Both commands declare a format of their own. /show names a top-level one and
+	/raw states its shape inline, and the resolved form records only where the
+	winning declaration sits.
+-->
+<resolved config="formats">
+	<command path="/show" runs="true">
+		<run from="/show" kind="request"/>
+		<format from="/show"/>
+	</command>
+	<command path="/raw" runs="true">
+		<run from="/raw" kind="shell"/>
+		<format from="/raw"/>
+	</command>
+</resolved>
