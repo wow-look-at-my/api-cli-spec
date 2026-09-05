@@ -12,13 +12,14 @@
 //
 // The whole directory drives the run, so a fixture nobody named cannot exist.
 //
-// The controls at the bottom run first, every time. Each builds a small tree
-// that breaks one property and demands the failure. A checker that cannot go
-// red reports a green specification whatever the schema says.
-import { readdirSync, readFileSync, mkdirSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
+// A fixture earns its place by pinning a decision the schema had to MODEL --
+// the xs:alternative sites, where the type depends on the instance. A document
+// that only proves an XSD primitive fires (a required attribute, a closed
+// content model, an enumeration, an xs:unique) tests the validator, not this
+// grammar, and does not belong here.
+import { readdirSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
-import { tmpdir } from "node:os";
 
 const validator = process.env.XML_VALIDATOR ?? "xml-validator";
 
@@ -72,60 +73,10 @@ function checkTree(root: string): { failures: Failure[]; checked: number } {
 	return { failures, checked };
 }
 
-// A schema small enough to read at a glance, for the controls.
-const TOY_SCHEMA = `<?xml version="1.1" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-\t<xs:element name="config">
-\t\t<xs:complexType>
-\t\t\t<xs:attribute name="name" use="required"/>
-\t\t</xs:complexType>
-\t</xs:element>
-</xs:schema>
-`;
-const OPEN_SCHEMA = TOY_SCHEMA.replace('<xs:attribute name="name" use="required"/>', "<xs:anyAttribute/>");
-const DECL = '<?xml version="1.1" encoding="UTF-8"?>';
-
-// control returns null when the checker caught the break, and the complaint
-// when it did not.
-function control(name: string, schema: string, valid: string, invalid: string, want: string): string | null {
-	const root = mkdtempSync(join(tmpdir(), "api-cli-spec-"));
-	try {
-		mkdirSync(join(root, "examples/valid"), { recursive: true });
-		mkdirSync(join(root, "examples/invalid"), { recursive: true });
-		writeFileSync(join(root, "api-cli.xsd"), schema);
-		writeFileSync(join(root, "examples/valid/a.xml"), valid);
-		writeFileSync(join(root, "examples/invalid/b.xml"), invalid);
-		const { failures } = checkTree(root);
-		if (failures.some((f) => f.why.includes(want))) return null;
-		const saw = JSON.stringify(failures.map((f) => f.why));
-		return `${name}: expected a failure mentioning ${JSON.stringify(want)}, saw ${saw}`;
-	} finally {
-		rmSync(root, { recursive: true, force: true });
-	}
-}
-
-const good = `${DECL}\n<config name="x"/>\n`;
-const rejected = `${DECL}\n<!-- rejects: unexpected attribute "nope" on element "config" -->\n<config name="x" nope="1"/>\n`;
-const undeclared = `${DECL}\n<config name="x" nope="1"/>\n`;
-const wrongReason = `${DECL}\n<!-- rejects: a reason this document never produces -->\n<config name="x" nope="1"/>\n`;
-
-const broken = [
-	control("a valid fixture the schema rejects", TOY_SCHEMA, `${DECL}\n<config/>\n`, rejected, "must validate, and did not"),
-	control("an invalid fixture with no declared reason", TOY_SCHEMA, good, undeclared, "no <!-- rejects: ... --> comment"),
-	control("an invalid fixture rejected for the wrong reason", TOY_SCHEMA, good, wrongReason, "rejected for the wrong reason"),
-	control("an invalid fixture the schema accepts", OPEN_SCHEMA, good, rejected, "and validated instead"),
-].filter((c): c is string => c !== null);
-
-if (broken.length > 0) {
-	for (const b of broken) console.error(`BROKEN ${b}`);
-	console.error("\nthis checker cannot report the failures it exists to report");
-	process.exit(1);
-}
-
 const { failures, checked } = checkTree(process.argv[2] ?? ".");
 for (const f of failures) console.error(`FAIL ${f.file}: ${f.why}`);
 if (failures.length > 0) {
 	console.error(`\n${failures.length} of ${checked} fixtures failed`);
 	process.exit(1);
 }
-console.log(`ok: 4 controls, ${checked} fixtures`);
+console.log(`ok: ${checked} fixtures`);

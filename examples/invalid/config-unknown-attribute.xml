@@ -1,7 +1,0 @@
-<?xml version="1.1" encoding="UTF-8"?>
-<!-- rejects: unexpected attribute "version" on element "config" -->
-<config name="x" version="2">
-	<command name="c">
-		<run>x</run>
-	</command>
-</config>

@@ -1,8 +1,0 @@
-<?xml version="1.1" encoding="UTF-8"?>
-<!-- rejects: attribute "type" on element "arg": value "float" is not one of the allowed values -->
-<config name="x">
-	<command name="c">
-		<arg name="count" type="float"/>
-		<run>x</run>
-	</command>
-</config>

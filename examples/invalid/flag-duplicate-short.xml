@@ -1,9 +1,0 @@
-<?xml version="1.1" encoding="UTF-8"?>
-<!-- rejects: xs:unique "flagShort" -->
-<config name="x">
-	<command name="c">
-		<flag name="verbose" short="v" type="bool"/>
-		<flag name="version" short="v" type="bool"/>
-		<run>x</run>
-	</command>
-</config>

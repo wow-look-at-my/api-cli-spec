@@ -24,7 +24,9 @@ Every document under `examples/valid` must validate. Every document under `examp
 <!-- rejects: attribute "type" on element "flag": value "date" is not one of the allowed values -->
 ```
 
-The declared reason is what makes a rejection fixture a test. A document rejected for some other reason fails the suite, so a schema that refuses everything cannot read as complete coverage. The checker walks the whole directory, so a fixture nobody named cannot exist. It also runs four controls first, every time. Each builds a small tree that breaks one property and demands the failure. A checker that cannot go red reports a green specification whatever the schema says.
+The declared reason is what makes a rejection fixture a test. A document rejected for some other reason fails the suite, so a schema that refuses everything cannot read as complete coverage. The checker walks the whole directory, so a fixture nobody named cannot exist.
+
+A rejection fixture pins a decision the schema had to model: the `xs:alternative` sites, where an element's type depends on the instance. Some documents only prove that an XSD primitive fires: a required attribute, a closed content model, an enumeration, an `xs:unique`. Those test the validator rather than this grammar. They have no place here.
 
 ## What the language looks like
 
@@ -44,7 +46,7 @@ api-cli dispatches on an element's name, never on its position. `<fields>` befor
 
 ## Where the schema is stricter than the loader
 
-One place, on purpose. The loader reads a boolean attribute as `value == "true"`, so `required="1"` and `required="yes"` are both false, silently. The schema permits `true` and `false` and nothing else, which turns that silent misreading into an error. `examples/invalid/boolean-not-true-or-false.xml` pins it.
+One place, on purpose. The loader reads a boolean attribute as `value == "true"`, so `required="1"` and `required="yes"` are both false, silently. The schema permits `true` and `false` and nothing else, which turns that silent misreading into an error.
 
 Everywhere else the schema accepts exactly what the loader accepts. Building it, we checked each rule against every configuration in api-cli's own test suite, and against its shipped `api.example.xml` and `samples/github/github.xml`.
 

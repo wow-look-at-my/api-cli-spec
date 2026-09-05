@@ -1,7 +1,0 @@
-<?xml version="1.1" encoding="UTF-8"?>
-<!-- rejects: required attribute "name" is missing on element "config" -->
-<config>
-	<command name="c">
-		<run>x</run>
-	</command>
-</config>

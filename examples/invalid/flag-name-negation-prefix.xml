@@ -1,8 +1,0 @@
-<?xml version="1.1" encoding="UTF-8"?>
-<!-- rejects: attribute "name" on element "flag": value "no-color" does not match pattern -->
-<config name="x">
-	<command name="c">
-		<flag name="no-color" type="bool"/>
-		<run>x</run>
-	</command>
-</config>
