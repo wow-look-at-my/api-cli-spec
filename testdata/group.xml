@@ -1,0 +1,23 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!--
+	A parent that groups its subcommands and never runs itself, and a child that
+	replaces the inherited shell run with a request.
+-->
+<config name="group">
+	<cwd>/srv</cwd>
+	<run>echo root</run>
+	<command name="db" description="Database commands.">
+		<cwd>/var/lib/db</cwd>
+		<confirm>Touch the database?</confirm>
+		<command name="dump" description="Write a dump.">
+			<run>pg_dump</run>
+		</command>
+		<command name="status" description="Ask the API instead.">
+			<run>
+				<request>
+					<url>https://example.invalid/db/status</url>
+				</request>
+			</run>
+		</command>
+	</command>
+</config>

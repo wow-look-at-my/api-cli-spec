@@ -1,0 +1,31 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- The legacy presentation: a named format, a reference to it, and an inline one. -->
+<config name="formats">
+	<formats>
+		<format name="rows" input="json" when="{{ .tty }}">
+			<view name="wide" default="true">
+				<for each="data"><value name="id"/> <value name="name"/>
+</for>
+			</view>
+			<view name="ids" when="{{ .flag.short }}">
+				<for each="data"><value name="id"/>
+</for>
+			</view>
+		</format>
+	</formats>
+	<command name="show" description="Show rows through the named format.">
+		<flag name="short" type="bool" description="Print ids only."/>
+		<run>
+			<request>
+				<url>https://example.invalid/rows</url>
+			</request>
+		</run>
+		<format ref="rows"/>
+	</command>
+	<command name="raw" description="Shape the output inline instead.">
+		<run>cat /etc/hostname</run>
+		<format input="lines">
+			<view name="plain"><value name="result.stdout"/></view>
+		</format>
+	</command>
+</config>

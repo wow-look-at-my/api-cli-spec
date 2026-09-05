@@ -1,0 +1,6 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<resolved config="placeholders">
+	<command path="/say" runs="true">
+		<run from="/say" kind="shell"/>
+	</command>
+</resolved>

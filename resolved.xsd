@@ -7,10 +7,10 @@
 	and a command's effective settings come from walking its ancestors, so the
 	answer appears in no single place in the source.
 
-	examples/resolved/ holds this form for every document under examples/valid/,
-	and README.md states the rules that produce it. An implementation reads a
-	document, emits this, and compares. The comparison is on the values, not on
-	the bytes: attribute order and whitespace carry nothing here.
+	testdata/ holds this form beside every document, and README.md states the
+	rules that produce it. An implementation reads a document, emits this, and
+	compares. The comparison is on the values, not on the bytes: attribute
+	order and whitespace carry nothing here.
 
 	A path names a node. "/" is the document root, and "/repo/list" is the
 	command "list" inside the command "repo".

@@ -1,0 +1,23 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!--
+	/db has subcommands and no runnable=, so it does not run. It still resolves
+	settings, because its children read them from it. /db/status replaces the
+	inherited shell run rather than adding to it.
+-->
+<resolved config="group">
+	<command path="/db" runs="false">
+		<run from="/" kind="shell"/>
+		<cwd from="/db">/var/lib/db</cwd>
+		<confirm from="/db"/>
+	</command>
+	<command path="/db/dump" runs="true">
+		<run from="/db/dump" kind="shell"/>
+		<cwd from="/db">/var/lib/db</cwd>
+		<confirm from="/db"/>
+	</command>
+	<command path="/db/status" runs="true">
+		<run from="/db/status" kind="request"/>
+		<cwd from="/db">/var/lib/db</cwd>
+		<confirm from="/db"/>
+	</command>
+</resolved>
