@@ -1,0 +1,23 @@
+name: CI
+
+on:
+    push:
+        branches: ['**']
+
+jobs:
+    spec:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            # The suite is TypeScript, which node runs directly from 22.18 on.
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+
+            # install-only: tools/check.ts drives the binary itself, per fixture.
+            - uses: wow-look-at-my/xml-validator@master
+              with:
+                  install-only: 'true'
+
+            - run: node tools/check.ts
