@@ -15,9 +15,10 @@ jobs:
               with:
                   node-version: '22'
 
-            - name: install xml-validator
-              run: |
-                  curl -fsSL https://apt.pazer.build/xml-validator/install.sh | sudo sh
-                  sudo apt-get install -y xml-validator
+            # install-only, because the suite drives the binary itself: it asserts
+            # each invalid fixture is REJECTED, which the validate mode fails on.
+            - uses: wow-look-at-my/xml-validator@master
+              with:
+                  install-only: 'true'
 
             - run: node tools/check.ts
