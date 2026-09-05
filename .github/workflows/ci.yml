@@ -15,8 +15,7 @@ jobs:
               with:
                   node-version: '22'
 
-            # install-only, because the suite drives the binary itself: it asserts
-            # each invalid fixture is REJECTED, which the validate mode fails on.
+            # install-only: tools/check.ts drives the binary itself, per fixture.
             - uses: wow-look-at-my/xml-validator@master
               with:
                   install-only: 'true'

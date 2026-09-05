@@ -1,7 +1,0 @@
-<?xml version="1.1" encoding="UTF-8"?>
-<!-- rejects: unexpected attribute "name" on element "value" -->
-<config name="x">
-	<command name="c">
-		<run>echo <value name="var.a" expr="{{ .var.b }}"/></run>
-	</command>
-</config>

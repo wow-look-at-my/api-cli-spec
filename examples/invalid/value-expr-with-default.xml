@@ -1,7 +1,0 @@
-<?xml version="1.1" encoding="UTF-8"?>
-<!-- rejects: unexpected attribute "default" on element "value" -->
-<config name="x">
-	<command name="c">
-		<run>echo <value expr="{{ .var.b }}" default="fallback"/></run>
-	</command>
-</config>
