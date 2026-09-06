@@ -1,9 +1,9 @@
-// The specification's suite.
+// The specification's suite: resolving each document under testdata/ produces
+// the resolved form beside it. A schema states what a document may contain.
+// Only this states what it means.
 //
-// Every document under testdata/ validates against api-cli.xsd, its resolved
-// form validates against resolved.xsd, and resolving the document produces
-// that form. The last of those is the test with something to say: a schema
-// states what a document may contain, and only this states what it means.
+// Whether the schema accepts a document is xml-validator's answer, and CI asks
+// it by running that tool. Asking it again from here tests xml-validator.
 package spec_test
 
 import (
@@ -47,27 +47,6 @@ func parse(t *testing.T, path string) *validator.Document {
 	doc, err := validator.ParseTree(file)
 	require.NoError(t, err, "%s does not parse", path)
 	return doc
-}
-
-// validate reads the schema from the package's own embedded copy, which is
-// the text a consumer gets, rather than from the file beside it.
-func validate(t *testing.T, path, schema, schemaName string) {
-	t.Helper()
-	file, err := os.Open(path)
-	require.NoError(t, err)
-	defer file.Close()
-
-	err = validator.ValidateWithSchema(file, strings.NewReader(schema))
-	assert.NoError(t, err, "%s must validate against %s", path, schemaName)
-}
-
-func TestEveryDocumentValidatesAgainstTheSchema(t *testing.T) {
-	for _, name := range documents(t) {
-		t.Run(name, func(t *testing.T) {
-			validate(t, filepath.Join("testdata", name+".xml"), spec.Schema, "api-cli.xsd")
-			validate(t, filepath.Join("testdata", name+resolvedSuffix), spec.ResolvedSchema, "resolved.xsd")
-		})
-	}
 }
 
 // A document with no resolved form states what it may say and never what it

@@ -13,6 +13,20 @@ permissions:
     artifact-metadata: write
 
 jobs:
+    # Whether a document matches a schema is xml-validator's answer, so this asks the tool rather than re-implements the question in a Go test.
+    validate-xml:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: wow-look-at-my/xml-validator@master
+              with:
+                  schema: api-cli.xsd
+                  files: 'testdata/*.xml !testdata/*.resolved.xml'
+            - uses: wow-look-at-my/xml-validator@master
+              with:
+                  schema: resolved.xsd
+                  files: 'testdata/*.resolved.xml'
+
     spec:
         runs-on: ubuntu-latest
         steps:
