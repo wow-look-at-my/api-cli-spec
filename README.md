@@ -26,7 +26,7 @@ There is no rejection corpus, on purpose. A document the schema refuses states n
 
 ## Conformance
 
-`Resolve` is the reference reader, and it reads structure only. It never renders a placeholder, and it depends on no implementation of the language.
+`Resolve` is the reference reader. It reads structure only. It never renders a placeholder. It depends on no implementation of the language.
 
 A second implementation reads a document, emits the resolved form, and compares against the partner file. The comparison is on the values. A conformance suite therefore lives here, in the specification, rather than beside one reader where it drifts from every other.
 
