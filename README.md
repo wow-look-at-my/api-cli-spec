@@ -18,9 +18,9 @@ xml-validator --schema api-cli.xsd path/to/api.xml
 go-toolchain
 ```
 
-Each document under `testdata/` validates against `api-cli.xsd`, and its `.resolved.xml` partner validates against `resolved.xsd`. A file on either side with no partner fails the run, so a document cannot arrive without its meaning.
+Each document under `testdata/` has a partner of the same name under `testdata/resolved/`. A file on either side with no partner fails the run, so a document cannot arrive without its meaning. CI validates the first directory against `api-cli.xsd` and the second against `resolved.xsd`, by running `xml-validator` itself.
 
-The test that carries the weight is the third one. It resolves each document with `Resolve` and compares the result against the partner file, on the values: attribute order and whitespace carry nothing. That comparison is the only place the resolution rules are executable. A schema states what a document may contain, and the rules below state what it means.
+The test that carries the weight resolves each document with `Resolve`. It compares the result against the partner file, on the values alone: attribute order and whitespace carry nothing. That comparison is the only place the resolution rules are executable. A schema states what a document may contain, and the rules below state what it means.
 
 There is no rejection corpus, on purpose. A document the schema refuses states nothing the schema does not already state itself. It is the same rule written twice in two files. Nothing loosens an `xs:element` by accident either. An XSD is declarative and hand-written, so a rule changes only when somebody changes it, deliberately.
 
