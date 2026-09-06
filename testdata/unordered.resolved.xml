@@ -1,0 +1,10 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!--
+	The source writes this command's children backwards. The resolved form is
+	the same one a forward document produces, which is the point of the source.
+-->
+<resolved config="unordered">
+	<command path="/show" runs="true">
+		<run from="/show" kind="request"/>
+	</command>
+</resolved>

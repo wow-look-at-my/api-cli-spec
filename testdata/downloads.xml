@@ -1,0 +1,29 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- Queue settings, and a hand-off that repeats over a list. -->
+<config name="downloads">
+	<downloads concurrency="8" retries="0" dir="./out"/>
+	<command name="grab" description="Fetch every asset of a release.">
+		<arg name="tag" type="string" required="true" description="Release tag."/>
+		<steps>
+			<step name="assets">
+				<run>
+					<request>
+						<url>https://example.invalid/releases/<value name="arg.tag"/></url>
+						<response jq=".assets"/>
+					</request>
+				</run>
+			</step>
+		</steps>
+		<download over="result.assets.data" when="{{ truthy .result.assets.data }}">
+			<url><value name="item.url"/></url>
+			<to>out/<value name="item.name"/></to>
+			<hash algo="SHA256"><value name="item.digest"/></hash>
+			<header name="Accept">application/octet-stream</header>
+			<cookie name="session"><value name="var.session"/></cookie>
+			<if test="var.token">
+				<header name="Authorization">Bearer <value name="var.token"/></header>
+				<cookie name="csrf"><value name="var.csrf"/></cookie>
+			</if>
+		</download>
+	</command>
+</config>

@@ -1,0 +1,9 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<resolved config="fields">
+	<command path="/list" runs="true">
+		<run from="/list" kind="request"/>
+	</command>
+	<command path="/counts" runs="true">
+		<run from="/counts" kind="request"/>
+	</command>
+</resolved>

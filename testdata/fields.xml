@@ -1,0 +1,31 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- Two conditional <fields> blocks, and every attribute a <field> takes. -->
+<config name="fields">
+	<command name="list" description="List records.">
+		<run>
+			<request>
+				<url>https://example.invalid/records</url>
+			</request>
+		</run>
+		<fields over="data" footer="{{ len .data }} records" when="{{ .tty }}">
+			<field name="ID" priority="1">id</field>
+			<field name="Name" priority="2" truncate="30" default="(none)">attrs.name</field>
+			<field name="Summary" firstline="true" show_in="table,list">body</field>
+			<field name="Link" priority="9" expr="{{ $.var.base }}/r/{{ .id }}"/>
+		</fields>
+		<fields over="data" when="{{ not .tty }}">
+			<field name="id">id</field>
+		</fields>
+	</command>
+	<command name="counts" description="Walk a map with @key and @value.">
+		<run>
+			<request>
+				<url>https://example.invalid/counts</url>
+			</request>
+		</run>
+		<fields over="totals">
+			<field name="Label">@key</field>
+			<field name="Count">@value</field>
+		</fields>
+	</command>
+</config>

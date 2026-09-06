@@ -1,0 +1,8 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!--
+	/grab has no run and inherits none. Its download declarations are the
+	action, and they run after its steps.
+-->
+<resolved config="downloads">
+	<command path="/grab" runs="true"/>
+</resolved>
