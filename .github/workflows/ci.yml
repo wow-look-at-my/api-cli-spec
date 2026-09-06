@@ -17,4 +17,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
+            # The spec ships no binary, so buildhost has nothing to publish.
             - uses: wow-look-at-my/go-toolchain@master
+              with:
+                  autorelease: 'false'

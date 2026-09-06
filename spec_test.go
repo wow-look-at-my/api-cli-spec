@@ -49,24 +49,23 @@ func parse(t *testing.T, path string) *validator.Document {
 	return doc
 }
 
-func validate(t *testing.T, path, schema string) {
+// validate reads the schema from the package's own embedded copy, which is
+// the text a consumer gets, rather than from the file beside it.
+func validate(t *testing.T, path, schema, schemaName string) {
 	t.Helper()
 	file, err := os.Open(path)
 	require.NoError(t, err)
 	defer file.Close()
 
-	xsd, err := os.Open(schema)
-	require.NoError(t, err)
-	defer xsd.Close()
-
-	assert.NoError(t, validator.ValidateWithSchema(file, xsd), "%s must validate against %s", path, schema)
+	err = validator.ValidateWithSchema(file, strings.NewReader(schema))
+	assert.NoError(t, err, "%s must validate against %s", path, schemaName)
 }
 
 func TestEveryDocumentValidatesAgainstTheSchema(t *testing.T) {
 	for _, name := range documents(t) {
 		t.Run(name, func(t *testing.T) {
-			validate(t, filepath.Join("testdata", name+".xml"), "api-cli.xsd")
-			validate(t, filepath.Join("testdata", name+resolvedSuffix), "resolved.xsd")
+			validate(t, filepath.Join("testdata", name+".xml"), spec.Schema, "api-cli.xsd")
+			validate(t, filepath.Join("testdata", name+resolvedSuffix), spec.ResolvedSchema, "resolved.xsd")
 		})
 	}
 }
