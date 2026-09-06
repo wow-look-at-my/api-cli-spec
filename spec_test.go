@@ -49,6 +49,27 @@ func parse(t *testing.T, path string) *validator.Document {
 	return doc
 }
 
+// validate reads the schema from the package's own embedded copy, which is
+// the text a consumer gets, rather than from the file beside it.
+func validate(t *testing.T, path, schema, schemaName string) {
+	t.Helper()
+	file, err := os.Open(path)
+	require.NoError(t, err)
+	defer file.Close()
+
+	err = validator.ValidateWithSchema(file, strings.NewReader(schema))
+	assert.NoError(t, err, "%s must validate against %s", path, schemaName)
+}
+
+func TestEveryDocumentValidatesAgainstTheSchema(t *testing.T) {
+	for _, name := range documents(t) {
+		t.Run(name, func(t *testing.T) {
+			validate(t, filepath.Join("testdata", name+".xml"), spec.Schema, "api-cli.xsd")
+			validate(t, filepath.Join("testdata", name+resolvedSuffix), spec.ResolvedSchema, "resolved.xsd")
+		})
+	}
+}
+
 // A document with no resolved form states what it may say and never what it
 // means, and a resolved form with no document describes nothing.
 func TestEveryDocumentHasItsResolvedForm(t *testing.T) {
