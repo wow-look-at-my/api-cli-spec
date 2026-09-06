@@ -21,11 +21,11 @@ jobs:
             - uses: wow-look-at-my/xml-validator@master
               with:
                   schema: api-cli.xsd
-                  files: 'testdata/*.xml !testdata/*.resolved.xml'
+                  files: 'testdata/*.xml'
             - uses: wow-look-at-my/xml-validator@master
               with:
                   schema: resolved.xsd
-                  files: 'testdata/*.resolved.xml'
+                  files: 'testdata/resolved/*.xml'
 
     spec:
         runs-on: ubuntu-latest

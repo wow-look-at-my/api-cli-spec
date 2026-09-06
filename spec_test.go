@@ -1,6 +1,6 @@
 // The specification's suite: resolving each document under testdata/ produces
-// the resolved form beside it. A schema states what a document may contain.
-// Only this states what it means.
+// the form under testdata/resolved/. A schema states what a document may
+// contain. Only this states what it means.
 //
 // Whether the schema accepts a document is xml-validator's answer, and CI asks
 // it by running that tool. Asking it again from here tests xml-validator.
@@ -19,19 +19,21 @@ import (
 	spec "github.com/wow-look-at-my/api-cli-spec"
 )
 
-const resolvedSuffix = ".resolved.xml"
+// The two halves answer to different schemas, so each half is a directory. One
+// glob then names it, here and in the job that validates it.
+const (
+	documentDir = "testdata"
+	resolvedDir = "testdata/resolved"
+)
 
-// documents names every source document under testdata, by base name.
+// documents names every source document, by base name.
 func documents(t *testing.T) []string {
 	t.Helper()
-	entries, err := filepath.Glob(filepath.Join("testdata", "*.xml"))
+	entries, err := filepath.Glob(filepath.Join(documentDir, "*.xml"))
 	require.NoError(t, err)
 
 	var names []string
 	for _, path := range entries {
-		if strings.HasSuffix(path, resolvedSuffix) {
-			continue
-		}
 		names = append(names, strings.TrimSuffix(filepath.Base(path), ".xml"))
 	}
 	require.NotEmpty(t, names, "testdata holds no documents")
@@ -54,13 +56,13 @@ func parse(t *testing.T, path string) *validator.Document {
 func TestEveryDocumentHasItsResolvedForm(t *testing.T) {
 	sources := documents(t)
 	for _, name := range sources {
-		assert.FileExists(t, filepath.Join("testdata", name+resolvedSuffix))
+		assert.FileExists(t, filepath.Join(resolvedDir, name+".xml"))
 	}
 
-	resolved, err := filepath.Glob(filepath.Join("testdata", "*"+resolvedSuffix))
+	resolved, err := filepath.Glob(filepath.Join(resolvedDir, "*.xml"))
 	require.NoError(t, err)
 	for _, path := range resolved {
-		name := strings.TrimSuffix(filepath.Base(path), resolvedSuffix)
+		name := strings.TrimSuffix(filepath.Base(path), ".xml")
 		assert.Contains(t, sources, name, "%s resolves a document that is not here", path)
 	}
 }
@@ -68,10 +70,10 @@ func TestEveryDocumentHasItsResolvedForm(t *testing.T) {
 func TestResolveProducesTheStatedForm(t *testing.T) {
 	for _, name := range documents(t) {
 		t.Run(name, func(t *testing.T) {
-			got, err := spec.Resolve(parse(t, filepath.Join("testdata", name+".xml")))
+			got, err := spec.Resolve(parse(t, filepath.Join(documentDir, name+".xml")))
 			require.NoError(t, err)
 
-			want, err := spec.ParseResolved(parse(t, filepath.Join("testdata", name+resolvedSuffix)))
+			want, err := spec.ParseResolved(parse(t, filepath.Join(resolvedDir, name+".xml")))
 			require.NoError(t, err)
 
 			assert.Equal(t, want, got)
@@ -80,11 +82,11 @@ func TestResolveProducesTheStatedForm(t *testing.T) {
 }
 
 func TestResolveRejectsADocumentItCannotRead(t *testing.T) {
-	notAConfig := parse(t, filepath.Join("testdata", "minimal"+resolvedSuffix))
+	notAConfig := parse(t, filepath.Join(resolvedDir, "minimal.xml"))
 	_, err := spec.Resolve(notAConfig)
 	require.ErrorContains(t, err, "rooted at <config>")
 
-	notResolved := parse(t, filepath.Join("testdata", "minimal.xml"))
+	notResolved := parse(t, filepath.Join(documentDir, "minimal.xml"))
 	_, err = spec.ParseResolved(notResolved)
 	require.ErrorContains(t, err, "rooted at <resolved>")
 }
