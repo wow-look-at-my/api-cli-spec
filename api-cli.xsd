@@ -320,13 +320,13 @@
 		records and the outputs happen, then the real program runs.
 	-->
 	<xs:complexType name="mock">
-		<xs:sequence>
+		<xs:all>
 			<xs:element name="input" type="mockInput" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="output" type="mockOutput" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="record" type="mockRecord" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="stdout" type="content" minOccurs="0"/>
 			<xs:element name="stderr" type="content" minOccurs="0"/>
-		</xs:sequence>
+		</xs:all>
 		<!--
 			A template for the exit code, which is how a mock stands in for a
 			tool that fails. A leaf with a <run> takes the program's own code.

@@ -20,10 +20,9 @@
 			<input name="archive" match="\.a$" required="true"/>
 			<input name="members" match="\.o$" variadic="true"/>
 			<output path="{{ .mock.archive }}">!&lt;arch&gt;
-<for each="mock.members"><value name="."/>
+<for each="mock.members"><value expr="{{ . }}"/>
 </for></output>
-			<stderr>ar: <value name="mock.archive"/>: <value expr="{{ len .mock.members }}"/> members
-</stderr>
+			<stderr>ar: <value name="mock.archive"/>: <value expr="{{ len .mock.members }}"/> members<value expr="{{ &quot;\n&quot; }}"/></stderr>
 		</mock>
 	</command>
 
