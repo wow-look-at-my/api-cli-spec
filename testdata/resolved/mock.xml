@@ -1,0 +1,11 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!--
+	Each leaf runs. /cc and /ar have no run and inherit none: their <mock> is
+	the action. /strip declares one, which makes it a thin wrapper — the record
+	lands first, then the real program runs.
+-->
+<resolved config="mock">
+	<command path="/cc" runs="true"/>
+	<command path="/ar" runs="true"/>
+	<command path="/strip" runs="true"/>
+</resolved>

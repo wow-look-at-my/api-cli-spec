@@ -311,6 +311,72 @@
 	</xs:complexType>
 
 	<!--
+		A stand-in for a program. It is the leaf's action, like a <download>,
+		and its argv arrives through passthrough mode. <input> names the parts
+		of that argv, <output> writes the files the caller expects to find
+		afterwards, and <record> appends one line per call.
+
+		A leaf that declares a <mock> AND its own <run> is a thin wrapper: the
+		records and the outputs happen, then the real program runs.
+	-->
+	<xs:complexType name="mock">
+		<xs:sequence>
+			<xs:element name="input" type="mockInput" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="output" type="mockOutput" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="record" type="mockRecord" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="stdout" type="content" minOccurs="0"/>
+			<xs:element name="stderr" type="content" minOccurs="0"/>
+		</xs:sequence>
+		<!--
+			A template for the exit code, which is how a mock stands in for a
+			tool that fails. A leaf with a <run> takes the program's own code.
+		-->
+		<xs:attribute name="exit" type="template"/>
+	</xs:complexType>
+
+	<!--
+		One part of the incoming argv, named. match= is a regular expression
+		tested against each element of .rest in order, and the value lands at
+		.mock.<name>. required= and default= cannot both hold: a default is what
+		makes a missing value legal.
+	-->
+	<xs:complexType name="mockInput">
+		<xs:attribute name="name" type="xs:token" use="required"/>
+		<xs:attribute name="match" type="nonEmpty" use="required"/>
+		<xs:attribute name="variadic" type="bool"/>
+		<xs:attribute name="required" type="bool"/>
+		<xs:attribute name="default" type="template"/>
+	</xs:complexType>
+
+	<!--
+		One file the mock writes. The element's text is the body, and it is
+		empty by default, because a build tool reads a mock artifact's timestamp
+		rather than its bytes. from= copies an existing file instead, so a
+		declaration never carries both.
+	-->
+	<xs:complexType name="mockOutput" mixed="true">
+		<xs:group ref="placeholders" minOccurs="0" maxOccurs="unbounded"/>
+		<xs:attribute name="path" type="template" use="required"/>
+		<xs:attribute name="when" type="template"/>
+		<xs:attribute name="over" type="overExpr"/>
+		<xs:attribute name="from" type="template"/>
+		<xs:attribute name="append" type="bool"/>
+		<xs:attribute name="mode" type="xs:token"/>
+	</xs:complexType>
+
+	<!--
+		One line appended per invocation. The default body is a
+		compile_commands.json entry for this call, which is why the element
+		exists: point every tool of a build at one path, and the build writes
+		its own compilation database on the way past.
+	-->
+	<xs:complexType name="mockRecord" mixed="true">
+		<xs:group ref="placeholders" minOccurs="0" maxOccurs="unbounded"/>
+		<xs:attribute name="path" type="template" use="required"/>
+		<xs:attribute name="when" type="template"/>
+	</xs:complexType>
+
+	<!--
 		The one file a group of parts becomes. Each member still needs its own
 		<to>, so the parts land separately and the join concatenates them.
 		contiguous= reports a gap in the numeric order, and it reads the numbers
@@ -728,6 +794,7 @@
 			<xs:element name="tml" type="tml" minOccurs="0"/>
 			<xs:element ref="format" minOccurs="0"/>
 			<xs:element name="download" type="download" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="mock" type="mock" minOccurs="0"/>
 			<xs:element ref="command" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:all>
 		<xs:attribute name="name" type="commandName" use="required"/>

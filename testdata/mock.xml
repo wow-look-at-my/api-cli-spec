@@ -1,0 +1,40 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!--
+	A stand-in toolchain. Each leaf wears the argv of a real compilation tool,
+	writes the artifacts that tool would leave behind, and records the call.
+-->
+<config name="mock">
+	<command name="cc" passthrough="true" description="Stand in for a C compiler.">
+		<flag name="o" short="o" type="string" description="Output file."/>
+		<flag name="c" type="bool" description="Compile only."/>
+		<mock>
+			<input name="src" match="\.(c|cc|cpp)$" required="true"/>
+			<output path="{{ .flag.o }}" when="{{ .flag.o }}" mode="0755"/>
+			<output path="{{ stem .mock.src }}.o" when="{{ and .flag.c (not .flag.o) }}"/>
+			<record path="build/compile_commands.jsonl"/>
+		</mock>
+	</command>
+
+	<command name="ar" passthrough="true" description="Stand in for an archiver.">
+		<mock>
+			<input name="archive" match="\.a$" required="true"/>
+			<input name="members" match="\.o$" variadic="true"/>
+			<output path="{{ .mock.archive }}">!&lt;arch&gt;
+<for each="mock.members"><value name="."/>
+</for></output>
+			<stderr>ar: <value name="mock.archive"/>: <value expr="{{ len .mock.members }}"/> members
+</stderr>
+		</mock>
+	</command>
+
+	<command name="strip" passthrough="true" description="Wrap the real tool and record the call.">
+		<mock exit="0">
+			<input name="target" match="^[^-]" required="true"/>
+			<record path="build/strip.jsonl">{"target":<value expr="{{ .mock.target | toJson }}"/>}</record>
+		</mock>
+		<run>
+			<argv>/usr/bin/strip</argv>
+			<argv><value name="mock.target"/></argv>
+		</run>
+	</command>
+</config>
