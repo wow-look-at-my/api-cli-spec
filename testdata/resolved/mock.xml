@@ -7,5 +7,7 @@
 <resolved config="mock">
 	<command path="/cc" runs="true"/>
 	<command path="/ar" runs="true"/>
-	<command path="/strip" runs="true"/>
+	<command path="/strip" runs="true">
+		<run from="/strip" kind="argv"/>
+	</command>
 </resolved>
