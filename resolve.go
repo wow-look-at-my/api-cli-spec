@@ -35,6 +35,9 @@ type Command struct {
 	Stdin   *Setting
 	Confirm *Setting
 	Format  *Setting
+	// Preconditions accumulate instead of overriding, so this is every guard the
+	// node runs, ancestors first, rather than one winning value.
+	Preconditions []Setting
 }
 
 // A Resolved document is the tree in document order, parents before children.
@@ -50,6 +53,7 @@ type settings struct {
 	stdin   *Setting
 	confirm *Setting
 	format  *Setting
+	pre     []Setting
 }
 
 // Resolve reads a document and reports the tree a conforming reader arrives
@@ -98,6 +102,8 @@ func (r *Resolved) walk(node *validator.Element, parentPath string, inherited se
 		Stdin:   own.stdin,
 		Confirm: own.confirm,
 		Format:  own.format,
+
+		Preconditions: own.pre,
 	}
 	r.Commands = append(r.Commands, cmd)
 
@@ -126,6 +132,16 @@ func declarations(node *validator.Element, path string, inherited settings) sett
 			out.confirm = &Setting{From: path}
 		case "format":
 			out.format = &Setting{From: path}
+		case "preconditions":
+			// A guard adds to what the ancestors declared. A fresh slice holds the
+			// result, so one sibling's guards never reach another's.
+			declared := children(child, "precondition")
+			next := make([]Setting, 0, len(out.pre)+len(declared))
+			next = append(next, out.pre...)
+			for range declared {
+				next = append(next, Setting{From: path})
+			}
+			out.pre = next
 		}
 	}
 	return out
