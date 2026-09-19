@@ -1,7 +1,7 @@
 // Package spec is the executable half of the specification.
 //
 // api-cli.xsd says what a document may contain. resolved.xsd says what a
-// reader must work out from one, and README.md states the rules. This package
+// reader must work out from it, and README.md states the rules. This package
 // applies those rules, so the suite compares a document against the meaning
 // the specification claims for it rather than against prose.
 package spec
@@ -13,20 +13,19 @@ import (
 	"github.com/wow-look-at-my/xml-validator/validator"
 )
 
-// A Setting is one effective value, and the node whose declaration won it.
+// A Setting is the effective value, and the node whose declaration won it.
 type Setting struct {
 	From  string
 	Value string
 }
 
-// A Run is the effective run: where it was declared, and which of the three
-// things it is.
+// A Run is the effective run: where it was declared, and what kind it is.
 type Run struct {
 	From string
 	Kind string
 }
 
-// A Command is one node of the tree, with every setting resolved.
+// A Command is a node of the tree, with every setting resolved.
 type Command struct {
 	Path    string
 	Runs    bool
@@ -36,7 +35,7 @@ type Command struct {
 	Confirm *Setting
 	Format  *Setting
 	// Preconditions accumulate instead of overriding, so this is every guard the
-	// node runs, ancestors first, rather than one winning value.
+	// node runs, ancestors earliest, rather than a winning value.
 	Preconditions []Setting
 }
 
@@ -58,7 +57,7 @@ type settings struct {
 
 // Resolve reads a document and reports the tree a conforming reader arrives
 // at. It reads structure only: a placeholder is content, and this never
-// renders one.
+// renders it.
 func Resolve(doc *validator.Document) (*Resolved, error) {
 	root := doc.Root
 	if root == nil || root.Local != "config" {
@@ -71,7 +70,7 @@ func Resolve(doc *validator.Document) (*Resolved, error) {
 
 	out := &Resolved{Config: name}
 	// The root is an ancestor of every top-level command, so its own
-	// declarations resolve first, at the path "/".
+	// declarations resolve at the path "/".
 	inherited := declarations(root, "/", settings{})
 	for _, child := range root.ChildElements() {
 		if child.Local != "command" {
@@ -134,7 +133,7 @@ func declarations(node *validator.Element, path string, inherited settings) sett
 			out.format = &Setting{From: path}
 		case "preconditions":
 			// A guard adds to what the ancestors declared. A fresh slice holds the
-			// result, so one sibling's guards never reach another's.
+			// result, so a sibling's guards never reach another's.
 			declared := children(child, "precondition")
 			next := make([]Setting, 0, len(out.pre)+len(declared))
 			next = append(next, out.pre...)
@@ -147,9 +146,8 @@ func declarations(node *validator.Element, path string, inherited settings) sett
 	return out
 }
 
-// runKind names which of the three things a <run> is. A <request> child makes
-// it a request, an <argv> child makes it an argv list, and text alone makes it
-// shell.
+// runKind names what kind a <run> is. A <request> child makes it a request, an
+// <argv> child makes it an argv list, and text alone makes it shell.
 func runKind(run *validator.Element) string {
 	for _, child := range run.ChildElements() {
 		switch child.Local {
