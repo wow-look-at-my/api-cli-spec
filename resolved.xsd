@@ -54,6 +54,17 @@
 	</xs:complexType>
 
 	<!--
+		The guards a node runs. These accumulate rather than override, so this is a
+		list and its order is the order the node runs them in: the ancestors' first,
+		then the node's own.
+	-->
+	<xs:complexType name="preconditions">
+		<xs:sequence>
+			<xs:element name="precondition" type="marker" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!--
 		One node of the command tree. A node with no <run> child inherits none:
 		that is a document a reader must reject when the node runs, and the
 		absence is the finding.
@@ -65,6 +76,7 @@
 			<xs:element name="stdin" type="marker" minOccurs="0"/>
 			<xs:element name="confirm" type="marker" minOccurs="0"/>
 			<xs:element name="format" type="marker" minOccurs="0"/>
+			<xs:element name="preconditions" type="preconditions" minOccurs="0"/>
 		</xs:all>
 		<xs:attribute name="path" type="path" use="required"/>
 		<!-- True for a leaf, and for a parent that declares runnable="true". -->

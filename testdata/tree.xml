@@ -7,6 +7,9 @@
 	<description>A tree that exercises the structural grammar.</description>
 	<cwd>/tmp</cwd>
 	<stdin/>
+	<preconditions>
+		<precondition>{{ if not (safeSegments .arg.ref) }}ref must be one path segment{{ end }}</precondition>
+	</preconditions>
 	<run>echo root</run>
 	<command name="repo" description="Work with a repository." runnable="true">
 		<arg name="ref" type="string" pattern="^[0-9a-f]{7,40}$" description="A commit to inspect."/>

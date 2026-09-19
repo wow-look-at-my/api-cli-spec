@@ -42,6 +42,18 @@ func parseCommand(node *validator.Element) (Command, error) {
 	cmd := Command{Path: path, Runs: runs == "true"}
 
 	for _, child := range node.ChildElements() {
+		// The guards are a list rather than one winning value, so they arrive in a
+		// container element that carries no from= of its own.
+		if child.Local == "preconditions" {
+			for _, p := range children(child, "precondition") {
+				from, ok := p.Attr("from")
+				if !ok {
+					return Command{}, fmt.Errorf("%s: <precondition> declares no from=", path)
+				}
+				cmd.Preconditions = append(cmd.Preconditions, Setting{From: from})
+			}
+			continue
+		}
 		from, ok := child.Attr("from")
 		if !ok {
 			return Command{}, fmt.Errorf("%s: <%s> declares no from=", path, child.Local)

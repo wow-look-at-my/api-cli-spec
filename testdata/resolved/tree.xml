@@ -3,6 +3,9 @@
 	The root declares a run, a cwd and a stdin, so every command below carries
 	them unless it says otherwise. /repo/sync declares no run of its own and
 	inherits /repo's, which is what its steps run against.
+
+	The root's precondition is the one setting here that does not override. Every
+	command runs it, and /repo runs its own guard after it.
 -->
 <resolved config="tree">
 	<command path="/repo" runs="true">
@@ -10,22 +13,37 @@
 		<cwd from="/">/tmp</cwd>
 		<stdin from="/"/>
 		<confirm from="/repo"/>
+		<preconditions>
+			<precondition from="/"/>
+			<precondition from="/repo"/>
+		</preconditions>
 	</command>
 	<command path="/repo/list" runs="true">
 		<run from="/repo/list" kind="shell"/>
 		<cwd from="/">/tmp</cwd>
 		<stdin from="/"/>
 		<confirm from="/repo"/>
+		<preconditions>
+			<precondition from="/"/>
+			<precondition from="/repo"/>
+		</preconditions>
 	</command>
 	<command path="/repo/sync" runs="true">
 		<run from="/repo" kind="shell"/>
 		<cwd from="/">/tmp</cwd>
 		<stdin from="/"/>
 		<confirm from="/repo"/>
+		<preconditions>
+			<precondition from="/"/>
+			<precondition from="/repo"/>
+		</preconditions>
 	</command>
 	<command path="/sh" runs="true">
 		<run from="/sh" kind="shell"/>
 		<cwd from="/">/tmp</cwd>
 		<stdin from="/"/>
+		<preconditions>
+			<precondition from="/"/>
+		</preconditions>
 	</command>
 </resolved>
