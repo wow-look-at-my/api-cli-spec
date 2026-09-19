@@ -844,6 +844,12 @@
 				<xs:element name="run" type="run" minOccurs="0"/>
 				<xs:element name="cwd" type="content" minOccurs="0"/>
 				<xs:element name="stdin" type="content" minOccurs="0"/>
+				<!--
+					A guard declared here runs before every run in the tree, ahead of
+					the guards a node declares for itself. It is how one rule covers
+					every leaf instead of being copied into each of them.
+				-->
+				<xs:element name="preconditions" type="preconditions" minOccurs="0"/>
 				<xs:element ref="formats" minOccurs="0"/>
 				<xs:element ref="command" minOccurs="0" maxOccurs="unbounded"/>
 			</xs:all>

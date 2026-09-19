@@ -37,6 +37,7 @@ A document states each setting where an author wrote it. A command's effective s
 - **A node runs** when it is a leaf, or when it declares `runnable="true"`.
 - **`<run>`, `<cwd>`, `<stdin>`, `<confirm>` and `<format>` inherit.** A node's effective value is its own declaration, or the nearest ancestor's, or none. The document root is an ancestor of every top-level command.
 - **A `<run>` replaces an inherited one entirely.** It is one of three things, and the nearest declaration decides which.
+- **`<preconditions>` accumulate instead of overriding.** A node runs every guard its ancestors declared, in document order, and then its own. A guard on the root therefore gates every run in the tree, and a guard on a group node gates its subtree.
 - **A `<download>` node needs no run.** Its declarations are the action, and they follow the node's steps.
 - **A `<transport>` owns its `<cwd>` and `<stdin>`.** Those belong to the transport's program, and no command inherits them.
 - **A var or a flag is visible to the node that declares it and to that node's descendants.** `testdata/tree.xml` reads a parent's var from a child, so the corpus already commits to this.
@@ -71,7 +72,7 @@ These rules are part of the language. A conforming reader must reject a document
 |---|---|
 | `<entry>` holds an object whose keys are the author's own element names | An open wildcard needs `processContents="lax"`, which xml-validator refuses by design. Nothing constrains an `<entry>` subtree, so no schema can describe it. |
 | A leaf needs a run, its own or an ancestor's | It reads the ancestor chain. |
-| `<download>`, `<fields>`, `<steps>`, `<entry>` and `<preconditions>` need a node that runs | They read whether the node has subcommands. |
+| `<download>`, `<fields>`, `<steps>` and `<entry>` need a node that runs | They read whether the node has subcommands. |
 | `<fields>` and `<format>`, or `<tml>` and `<fields>`, are exclusive | Two sibling elements, not one element's attributes. |
 | `<download>` takes neither `<fields>` nor `<format>` | The same. |
 | `group=` and `order=` need a `<join>` | An attribute and a child element of the same node. |
