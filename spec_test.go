@@ -19,8 +19,8 @@ import (
 	spec "github.com/wow-look-at-my/api-cli-spec"
 )
 
-// The two halves answer to different schemas, so each half is a directory. One
-// glob then names it, here and in the job that validates it.
+// Each half answers to a different schema, so each half is a directory. A glob
+// then names it, here and in the job that validates it.
 const (
 	documentDir = "testdata"
 	resolvedDir = "testdata/resolved"

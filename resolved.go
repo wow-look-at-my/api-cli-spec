@@ -7,8 +7,8 @@ import (
 )
 
 // ParseResolved reads a document in the resolved form into the same shape
-// Resolve produces. The two are then compared on values, so attribute order
-// and whitespace carry nothing.
+// Resolve produces. Comparison is on values, so attribute order and
+// whitespace carry nothing.
 func ParseResolved(doc *validator.Document) (*Resolved, error) {
 	root := doc.Root
 	if root == nil || root.Local != "resolved" {
@@ -42,7 +42,7 @@ func parseCommand(node *validator.Element) (Command, error) {
 	cmd := Command{Path: path, Runs: runs == "true"}
 
 	for _, child := range node.ChildElements() {
-		// The guards are a list rather than one winning value, so they arrive in a
+		// The guards are a list rather than a winning value, so they arrive in a
 		// container element that carries no from= of its own.
 		if child.Local == "preconditions" {
 			for _, p := range children(child, "precondition") {
