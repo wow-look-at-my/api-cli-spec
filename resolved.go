@@ -73,6 +73,8 @@ func parseCommand(node *validator.Element) (Command, error) {
 			cmd.Confirm = &Setting{From: from}
 		case "format":
 			cmd.Format = &Setting{From: from}
+		case "watch":
+			cmd.Watch = &Setting{From: from, Value: child.TextContent()}
 		default:
 			return Command{}, fmt.Errorf("%s: <%s> is not part of the resolved form", path, child.Local)
 		}

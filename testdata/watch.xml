@@ -1,0 +1,38 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!--
+	A group that repeats by default. Every screen under it inherits the
+	interval, one screen names a faster one, and one leaf declares none of
+	its own but still repeats.
+-->
+<config name="watch">
+	<run>
+		<request>
+			<url>https://example.invalid/<value name="entry.path"/></url>
+		</request>
+	</run>
+	<command name="board" description="Screens that keep themselves current." watch="5s">
+		<command name="builds" description="The builds running right now.">
+			<entry>
+				<path>builds</path>
+			</entry>
+			<tml src="ui/builds.tml">
+				<prop name="rows" over="data.items">
+					<field name="id">id</field>
+				</prop>
+			</tml>
+		</command>
+		<command name="queue" description="The queue, twice a second." watch="500ms">
+			<entry>
+				<path>queue</path>
+			</entry>
+			<fields over="items">
+				<field name="id">id</field>
+			</fields>
+		</command>
+	</command>
+	<command name="version" description="One answer, one time.">
+		<entry>
+			<path>version</path>
+		</entry>
+	</command>
+</config>
