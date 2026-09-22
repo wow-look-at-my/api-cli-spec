@@ -34,6 +34,7 @@ type Command struct {
 	Stdin   *Setting
 	Confirm *Setting
 	Format  *Setting
+	Watch   *Setting
 	// Preconditions accumulate instead of overriding, so this is every guard the
 	// node runs, ancestors earliest, rather than a winning value.
 	Preconditions []Setting
@@ -52,6 +53,7 @@ type settings struct {
 	stdin   *Setting
 	confirm *Setting
 	format  *Setting
+	watch   *Setting
 	pre     []Setting
 }
 
@@ -101,6 +103,7 @@ func (r *Resolved) walk(node *validator.Element, parentPath string, inherited se
 		Stdin:   own.stdin,
 		Confirm: own.confirm,
 		Format:  own.format,
+		Watch:   own.watch,
 
 		Preconditions: own.pre,
 	}
@@ -119,6 +122,10 @@ func (r *Resolved) walk(node *validator.Element, parentPath string, inherited se
 // belongs to that thing rather than to the command tree.
 func declarations(node *validator.Element, path string, inherited settings) settings {
 	out := inherited
+	// An attribute, so it is read ahead of the child loop. The root carries none.
+	if watch, ok := node.Attr("watch"); ok {
+		out.watch = &Setting{From: path, Value: watch}
+	}
 	for _, child := range node.ChildElements() {
 		switch child.Local {
 		case "run":

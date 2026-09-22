@@ -1,0 +1,23 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!--
+	/board declares the interval, so /board/builds carries it from there.
+	/board/queue declares its own, and the nearer one wins. /version is
+	outside the group and carries none.
+-->
+<resolved config="watch">
+	<command path="/board" runs="false">
+		<run from="/" kind="request"/>
+		<watch from="/board">5s</watch>
+	</command>
+	<command path="/board/builds" runs="true">
+		<run from="/" kind="request"/>
+		<watch from="/board">5s</watch>
+	</command>
+	<command path="/board/queue" runs="true">
+		<run from="/" kind="request"/>
+		<watch from="/board/queue">500ms</watch>
+	</command>
+	<command path="/version" runs="true">
+		<run from="/" kind="request"/>
+	</command>
+</resolved>

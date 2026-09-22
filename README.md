@@ -35,7 +35,7 @@ A second implementation reads a document, emits the resolved form, and compares 
 A document states each setting where an author wrote it. A command's effective settings come from walking its ancestors, so the answer appears in no single place in the source. These are the rules the suite runs.
 
 - **A node runs** when it is a leaf, or when it declares `runnable="true"`.
-- **`<run>`, `<cwd>`, `<stdin>`, `<confirm>` and `<format>` inherit.** A node's effective value is its own declaration, or the nearest ancestor's, or none. The document root is an ancestor of every top-level command.
+- **`<run>`, `<cwd>`, `<stdin>`, `<confirm>`, `<format>` and `watch=` inherit.** A node's effective value is its own declaration, or the nearest ancestor's, or none. The document root is an ancestor of every top-level command.
 - **A `<run>` replaces an inherited one entirely.** It is one of three things, and the nearest declaration decides which.
 - **`<preconditions>` accumulate instead of overriding.** A node runs every guard its ancestors declared, in document order, and then its own. A guard on the root therefore gates every run in the tree, and a guard on a group node gates its subtree.
 - **A `<download>` node needs no run.** Its declarations are the action, and they follow the node's steps.
@@ -43,6 +43,16 @@ A document states each setting where an author wrote it. A command's effective s
 - **A var or a flag is visible to the node that declares it and to that node's descendants.** `testdata/tree.xml` reads a parent's var from a child, so the corpus already commits to this.
 
 A resolved file names the node each winning value came from. That is what a reader has to get right. It is also the one thing the source document never writes down.
+
+## Watch
+
+`watch="5s"` on a command says the node repeats on that interval by default. A reader runs the node, shows the result, waits, and runs it again, until the user stops it. Each run is whole: nothing is kept from the run before it.
+
+The value is an `interval`: a Go duration such as `2s` or `500ms`, or a plain number of seconds such as `2`. A reader holds it to a floor of its own, and rejects a document below that floor at load time.
+
+The attribute inherits like `<confirm>` does, so one `watch=` on a group covers every screen under it. A reader's own repeat flag, `--watch <interval>` in api-cli, overrides the document's value for one invocation. The value `off` on that flag runs the node one time.
+
+A node whose action is a `<download>` never repeats, because a transfer is one thing. A reader rejects `watch=` on such a node at load time. A node that reaches a `<download>` by inheritance alone is fine: the reader ignores the interval there and says so. A tool call over MCP is one run, and a reader ignores the interval there too.
 
 ## What the language looks like
 
@@ -54,7 +64,7 @@ Element content mixes text with three placeholders:
 - `<if test="path" eq="literal">...<else/>...</if>` branches.
 - `<for each="path">...</for>` repeats, rebinding `.` to each element.
 
-`testdata/` is the tour: `minimal`, `placeholders`, `request`, `transports`, `downloads`, `join-and-poll`, `fields`, `tml`, `formats`, `tree`, `group`, and `unordered`.
+`testdata/` is the tour: `minimal`, `placeholders`, `request`, `transports`, `downloads`, `join-and-poll`, `fields`, `tml`, `watch`, `formats`, `tree`, `group`, and `unordered`.
 
 ## Child elements are order-free
 
@@ -75,6 +85,8 @@ These rules are part of the language. A conforming reader must reject a document
 | `<download>`, `<fields>`, `<steps>` and `<entry>` need a node that runs | They read whether the node has subcommands. |
 | `<fields>` and `<format>`, or `<tml>` and `<fields>`, are exclusive | Two sibling elements, not one element's attributes. |
 | `<download>` takes neither `<fields>` nor `<format>` | The same. |
+| A `<download>` node declares no `watch=` | An attribute and a child element of the same node. |
+| A `watch=` is at or above the reader's floor | The floor belongs to the reader, and a pattern cannot compare a duration. |
 | `group=` and `order=` need a `<join>` | An attribute and a child element of the same node. |
 | `<join contiguous=>` needs `order=`, and a joined part needs its own `<to>` | The same. |
 | `runnable="true"` needs subcommands, and each of its args needs a `pattern=` | It reads the node's children. |

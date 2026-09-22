@@ -36,6 +36,16 @@
 		</xs:restriction>
 	</xs:simpleType>
 
+	<!--
+		A span of time: a Go duration ("2s", "500ms", "1m30s") or a plain
+		number of seconds ("2", "1.5"). A reader holds it to its own floor.
+	-->
+	<xs:simpleType name="interval">
+		<xs:restriction base="xs:token">
+			<xs:pattern value="([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h))+|[0-9]+(\.[0-9]+)?"/>
+		</xs:restriction>
+	</xs:simpleType>
+
 	<!-- A context path, such as "var.base_url" or "flag.dry-run". -->
 	<xs:simpleType name="path">
 		<xs:restriction base="xs:token">
@@ -806,6 +816,12 @@
 		-->
 		<xs:attribute name="runnable" type="bool"/>
 		<xs:attribute name="confirm" type="xs:string"/>
+		<!--
+			The node repeats on this interval by default, and repaints in place.
+			It inherits. A reader's own --watch flag overrides it, and "off"
+			runs the node one time.
+		-->
+		<xs:attribute name="watch" type="interval"/>
 	</xs:complexType>
 
 	<!--

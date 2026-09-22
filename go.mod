@@ -16,4 +16,4 @@ require (
 // The validator's own go.mod names a reader revision that no longer resolves.
 // Pointing every version of the reader at the one the validator was built from
 // keeps the module graph loadable.
-replace github.com/wow-look-at-my/xml-validator/reader => github.com/wow-look-at-my/xml-validator/reader v0.0.0-20260905064311-b54c8b4b3c13 // go-toolchain:auto-branch
+replace github.com/wow-look-at-my/xml-validator/reader => github.com/wow-look-at-my/xml-validator/reader v0.0.0 // go-toolchain:auto-branch
