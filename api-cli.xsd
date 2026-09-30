@@ -226,6 +226,13 @@
 		built-in client. Its <run> must be a command: a transport is what
 		carries a request, so it cannot be one. Omit <stdin> to send the request
 		body; declare it, even empty, to send something else.
+
+		On a <download>, the program's stdout is the file. It also gets a pipe on
+		fd 3, named by $API_CLI_PROGRESS_FD and by .request.progress_fd. The
+		program writes one JSON object per line there, {"done":N,"total":N},
+		either key optional, and the progress row shows it. An unknown key or a
+		negative number fails the download. A program that holds the body until
+		it exits needs these reports, or its row shows no bytes until the end.
 	-->
 	<xs:complexType name="transport">
 		<xs:all>
