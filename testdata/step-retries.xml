@@ -1,0 +1,21 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- A repeated poll that retries a failed call and skips an element that still fails. -->
+<config name="step-retries">
+	<command name="pull" description="Wait for every clip, then fetch the ones that finished.">
+		<arg name="ids" type="string" variadic="true" description="Clip ids."/>
+		<steps>
+			<step name="listing" over="arg.ids" until="{{ eq .status &quot;done&quot; }}" interval="1s" attempts="120" retries="3" on-error="skip">
+				<run>
+					<request>
+						<url>https://example.invalid/clips/<value name="item"/></url>
+						<response jq="."/>
+					</request>
+				</run>
+			</step>
+		</steps>
+		<download over="result.listing">
+			<url><value name="result.url"/></url>
+			<to>clips/<value name="item"/>.mp4</to>
+		</download>
+	</command>
+</config>

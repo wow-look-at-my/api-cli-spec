@@ -727,6 +727,26 @@
 		<xs:attribute name="until" type="template"/>
 		<xs:attribute name="interval" type="xs:token"/>
 		<xs:attribute name="attempts" type="xs:integer"/>
+		<!--
+			A failed run (a non-zero exit, a failed request) runs again up to
+			retries= more times, a fixed delay apart, before it counts as a
+			failure. It applies to each attempt of a poll and to each element of
+			over=.
+		-->
+		<xs:attribute name="retries" type="xs:nonNegativeInteger"/>
+		<!--
+			What a repeated step does with an element that still fails. fail stops
+			the run. skip leaves the element out of the result, names it, and lets
+			the run go on to exit non-zero with a summary. skip needs over=.
+		-->
+		<xs:attribute name="on-error">
+			<xs:simpleType>
+				<xs:restriction base="xs:token">
+					<xs:enumeration value="fail"/>
+					<xs:enumeration value="skip"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
 	</xs:complexType>
 
 	<xs:element name="steps">
