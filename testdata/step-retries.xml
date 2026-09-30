@@ -1,21 +1,21 @@
 <?xml version="1.1" encoding="UTF-8"?>
 <!-- A repeated poll that retries a failed call and skips an element that still fails. -->
 <config name="step-retries">
-	<command name="pull" description="Wait for every clip, then fetch the ones that finished.">
-		<arg name="ids" type="string" variadic="true" description="Clip ids."/>
+	<command name="wait" description="Wait for every job, then fetch what the finished ones made.">
+		<arg name="ids" type="string" variadic="true" description="Job ids."/>
 		<steps>
-			<step name="listing" over="arg.ids" until="{{ eq .status &quot;done&quot; }}" interval="1s" attempts="120" retries="3" on-error="skip">
+			<step name="jobs" over="arg.ids" until="{{ eq .status &quot;done&quot; }}" interval="2s" attempts="30" retries="3" on-error="skip">
 				<run>
 					<request>
-						<url>https://example.invalid/clips/<value name="item"/></url>
+						<url>https://example.invalid/jobs/<value name="item"/></url>
 						<response jq="."/>
 					</request>
 				</run>
 			</step>
 		</steps>
-		<download over="result.listing">
+		<download over="result.jobs">
 			<url><value name="result.url"/></url>
-			<to>clips/<value name="item"/>.mp4</to>
+			<to>out/<value name="item.item"/>.bin</to>
 		</download>
 	</command>
 </config>
