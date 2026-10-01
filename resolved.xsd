@@ -1,30 +1,22 @@
 <?xml version="1.1" encoding="UTF-8"?>
-<!--
-	The resolved form of a document.
-
-	api-cli.xsd says what a document may contain. This says what a reader must
-	work out from one. A document states each setting where an author wrote it,
-	and a command's effective settings come from walking its ancestors, so the
-	answer appears in no single place in the source.
-
-	testdata/ holds this form beside every document, and README.md states the
-	rules that produce it. An implementation reads a document, emits this, and
-	compares. The comparison is on the values, not on the bytes: attribute
-	order and whitespace carry nothing here.
-
-	A path names a node. "/" is the document root, and "/repo/list" is the
-	command "list" inside the command "repo".
--->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:annotation>
+		<xs:documentation>The resolved form of a document: each command's effective settings after inheritance. testdata/ holds it beside every document. A comparison is on values, not bytes.</xs:documentation>
+	</xs:annotation>
 
 	<xs:simpleType name="path">
+		<xs:annotation>
+			<xs:documentation>A node of the tree. "/" is the root, and "/repo/list" is the command "list" inside "repo".</xs:documentation>
+		</xs:annotation>
 		<xs:restriction base="xs:token">
 			<xs:pattern value="/|(/[^/]+)+"/>
 		</xs:restriction>
 	</xs:simpleType>
 
-	<!-- The three things a <run> can be. A reader reports which one won. -->
 	<xs:simpleType name="runKind">
+		<xs:annotation>
+			<xs:documentation>Which form the winning run takes: "shell", "argv" or "request".</xs:documentation>
+		</xs:annotation>
 		<xs:restriction base="xs:token">
 			<xs:enumeration value="shell"/>
 			<xs:enumeration value="argv"/>
@@ -32,67 +24,136 @@
 		</xs:restriction>
 	</xs:simpleType>
 
-	<!--
-		An inherited setting. from= is the node that declared the winning value,
-		which is the node itself when it declares one.
-	-->
 	<xs:complexType name="inherited">
+		<xs:annotation>
+			<xs:documentation>An inherited value. The text is the value.</xs:documentation>
+		</xs:annotation>
 		<xs:simpleContent>
 			<xs:extension base="xs:string">
-				<xs:attribute name="from" type="path" use="required"/>
+				<xs:attribute name="from" type="path" use="required">
+					<xs:annotation>
+						<xs:documentation>The node that declared the winning value: the node itself when it declares one.</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
 			</xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>
 
 	<xs:complexType name="inheritedRun">
-		<xs:attribute name="from" type="path" use="required"/>
-		<xs:attribute name="kind" type="runKind" use="required"/>
+		<xs:annotation>
+			<xs:documentation>The run a node inherits.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="from" type="path" use="required">
+			<xs:annotation>
+				<xs:documentation>The node that declared the winning run.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="kind" type="runKind" use="required">
+			<xs:annotation>
+				<xs:documentation>The form of that run.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
 	</xs:complexType>
 
 	<xs:complexType name="marker">
-		<xs:attribute name="from" type="path" use="required"/>
+		<xs:annotation>
+			<xs:documentation>A setting whose value is not compared, only where it came from.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="from" type="path" use="required">
+			<xs:annotation>
+				<xs:documentation>The node that declared it.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
 	</xs:complexType>
 
-	<!--
-		The guards a node runs. These accumulate rather than override, so this is a
-		list and its order is the order the node runs them in: the ancestors' first,
-		then the node's own.
-	-->
 	<xs:complexType name="preconditions">
+		<xs:annotation>
+			<xs:documentation>The guards a node runs. They accumulate, in run order: the ancestors' first, then the node's own.</xs:documentation>
+		</xs:annotation>
 		<xs:sequence>
-			<xs:element name="precondition" type="marker" maxOccurs="unbounded"/>
+			<xs:element name="precondition" type="marker" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>One guard, and the node that declared it.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
-	<!--
-		One node of the command tree. A node with no <run> child inherits none:
-		that is a document a reader must reject when the node runs, and the
-		absence is the finding.
-	-->
 	<xs:complexType name="command">
+		<xs:annotation>
+			<xs:documentation>One node of the command tree, with its effective settings.</xs:documentation>
+		</xs:annotation>
 		<xs:all>
-			<xs:element name="run" type="inheritedRun" minOccurs="0"/>
-			<xs:element name="cwd" type="inherited" minOccurs="0"/>
-			<xs:element name="stdin" type="marker" minOccurs="0"/>
-			<xs:element name="confirm" type="marker" minOccurs="0"/>
-			<xs:element name="format" type="marker" minOccurs="0"/>
-			<xs:element name="watch" type="inherited" minOccurs="0"/>
-			<xs:element name="preconditions" type="preconditions" minOccurs="0"/>
+			<xs:element name="run" type="inheritedRun" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The effective run. Absent means none, which a reader rejects when the node runs.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="cwd" type="inherited" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The effective working directory.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="stdin" type="marker" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Where the effective stdin comes from.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="confirm" type="marker" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Where the effective confirm prompt comes from.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="format" type="marker" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Where the effective format comes from.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="watch" type="inherited" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The effective watch interval.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="preconditions" type="preconditions" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Every guard the node runs.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:all>
-		<xs:attribute name="path" type="path" use="required"/>
-		<!-- True for a leaf, and for a parent that declares runnable="true". -->
-		<xs:attribute name="runs" type="xs:boolean" use="required"/>
+		<xs:attribute name="path" type="path" use="required">
+			<xs:annotation>
+				<xs:documentation>The node.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="runs" type="xs:boolean" use="required">
+			<xs:annotation>
+				<xs:documentation>True for a leaf, and for a parent with runnable="true".</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
 	</xs:complexType>
 
 	<xs:element name="resolved">
+		<xs:annotation>
+			<xs:documentation>The root of a resolved form.</xs:documentation>
+		</xs:annotation>
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element name="command" type="command" maxOccurs="unbounded"/>
+				<xs:element name="command" type="command" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>One node, the root included.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
 			</xs:sequence>
-			<!-- The document's own name=, so a file cannot drift from its source. -->
-			<xs:attribute name="config" type="xs:token" use="required"/>
+			<xs:attribute name="config" type="xs:token" use="required">
+				<xs:annotation>
+					<xs:documentation>The document's own name=, so a file cannot drift from its source.</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
 		</xs:complexType>
 		<xs:unique name="commandPath">
+			<xs:annotation>
+				<xs:documentation>Each path appears once.</xs:documentation>
+			</xs:annotation>
 			<xs:selector xpath="command"/>
 			<xs:field xpath="@path"/>
 		</xs:unique>
