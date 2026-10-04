@@ -60,11 +60,35 @@ The root is `<config name="...">`. It holds commands. A command runs a shell com
 
 Element content mixes text with three placeholders:
 
-- `<value name="var.x" default="d" as="f"/>` reads a context path. `<value expr="{{ . }}"/>` is a verbatim template instead.
+- `<value name="var.x" default="d" as="f"/>` reads a context path. `<value expr="{{ . }}"/>` is a verbatim template instead, and `<value><expr>{{ . }}</expr></value>` is the same template in its element form.
 - `<if test="path" eq="literal">...<else/>...</if>` branches.
 - `<for each="path">...</for>` repeats, rebinding `.` to each element.
 
 `testdata/` is the tour: `minimal`, `placeholders`, `request`, `transports`, `downloads`, `join-and-poll`, `fields`, `tml`, `watch`, `formats`, `tree`, `group`, and `unordered`.
+
+## A template attribute has an element form
+
+Every attribute that holds a template, such as `when=`, `expr=`, `jq=`, `over=` or `path=`, can be a child element of the same name instead. `testdata/template-elements.xml` shows each one. A long template then spreads over indented lines.
+
+- Plain text is cut into lines. Each line loses its surrounding whitespace, and the lines join with nothing between them.
+- A CDATA section is kept as written, with its spaces and newlines.
+- Text and CDATA join in document order.
+- The element holds text and CDATA only. A placeholder inside it is an error.
+
+```xml
+<fields over="data.items">
+	<footer>
+		{{ len .data.items }}
+		<![CDATA[ shown, ]]>
+		{{ .data.total }}
+		<![CDATA[ in all]]>
+	</footer>
+</fields>
+```
+
+That footer means exactly what `footer="{{ len .data.items }} shown, {{ .data.total }} in all"` means. A line break therefore goes where the template needs no space, and a space at either end of a piece goes in CDATA.
+
+The element content types that hold templates already, such as `<url>`, `<header>`, `<body>` and `<confirm>`, keep their own rules. Their text mixes with placeholders, and inline whitespace in it is content.
 
 ## Child elements are order-free
 
@@ -98,4 +122,8 @@ These rules are part of the language. A conforming reader must reject a document
 | At most one transport is the default | "At most one true" is not a uniqueness constraint. |
 | `allow-status=` needs the default transport | It reads which transport the request resolves to. |
 | A precondition cannot read `.result` | It reads the template body. |
+| A template attribute and its element form are exclusive, and the element appears at most once | An attribute and a child element of the same node. |
+| `path=` on `<output>` and `<record>`, and `to=` on `<join>`, come as the attribute or as the element | The same. |
+| A field with an `<expr>` element has no path text, and a field without one has a path | Text and a child element of the same node. |
+| `<confirm>` and `confirm=` on one command are exclusive | An attribute and a child element of the same node. |
 | `<format ref=>` names a declared format | The reference crosses from a command to the top-level `<formats>`, past the subtree an identity constraint selects over. |
