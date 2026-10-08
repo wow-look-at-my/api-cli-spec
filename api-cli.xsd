@@ -58,6 +58,13 @@
 		<xs:restriction base="nonEmpty"/>
 	</xs:simpleType>
 
+	<xs:simpleType name="templateText">
+		<xs:annotation>
+			<xs:documentation>The element form of a template attribute. Each line of plain text loses its surrounding whitespace, and the lines join with nothing between them. A CDATA section is kept as written. The attribute and the element on one node is an error a reader reports.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="nonEmpty"/>
+	</xs:simpleType>
+
 	<xs:complexType name="valueByName">
 		<xs:annotation>
 			<xs:documentation>The path form of a value: it reads one context path.</xs:documentation>
@@ -94,12 +101,29 @@
 		<xs:attribute name="as" use="prohibited"/>
 	</xs:complexType>
 
+	<xs:complexType name="valueByExprElement">
+		<xs:annotation>
+			<xs:documentation>The template form with the template in an expr element. It takes no name=, default= or as=.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="expr" type="templateText">
+				<xs:annotation>
+					<xs:documentation>The element form of expr=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="name" use="prohibited"/>
+		<xs:attribute name="default" use="prohibited"/>
+		<xs:attribute name="as" use="prohibited"/>
+	</xs:complexType>
+
 	<xs:element name="value">
 		<xs:annotation>
-			<xs:documentation>A placeholder for one value. expr= selects the template form. Otherwise name= reads a path.</xs:documentation>
+			<xs:documentation>A placeholder for one value. expr= or an expr element selects the template form. Otherwise name= reads a path.</xs:documentation>
 		</xs:annotation>
 		<xs:alternative test="@expr" type="valueByExpr"/>
-		<xs:alternative type="valueByName"/>
+		<xs:alternative test="@name" type="valueByName"/>
+		<xs:alternative type="valueByExprElement"/>
 	</xs:element>
 
 	<xs:complexType name="ifType" mixed="true">
@@ -252,6 +276,13 @@
 		<xs:annotation>
 			<xs:documentation>The shaping of a response body.</xs:documentation>
 		</xs:annotation>
+		<xs:all>
+			<xs:element name="jq" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of jq=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:all>
 		<xs:attribute name="jq" type="nonEmpty">
 			<xs:annotation>
 				<xs:documentation>A jq program, rendered as a template first. A bare dotted name reads the program from the context.</xs:documentation>
@@ -490,6 +521,26 @@
 					<xs:documentation>Concatenate a group of parts into one file.</xs:documentation>
 				</xs:annotation>
 			</xs:element>
+			<xs:element name="over" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of over=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="when" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of when=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="group" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of group=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="order" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of order=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:all>
 		<xs:attribute name="over" type="overExpr">
 			<xs:annotation>
@@ -548,6 +599,11 @@
 					<xs:documentation>What the mock prints to stderr.</xs:documentation>
 				</xs:annotation>
 			</xs:element>
+			<xs:element name="exit" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of exit=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:all>
 		<xs:attribute name="exit" type="template">
 			<xs:annotation>
@@ -560,6 +616,13 @@
 		<xs:annotation>
 			<xs:documentation>One named part of the incoming argv. Its value lands at .mock.NAME.</xs:documentation>
 		</xs:annotation>
+		<xs:all>
+			<xs:element name="default" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of default=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:all>
 		<xs:attribute name="name" type="xs:token" use="required">
 			<xs:annotation>
 				<xs:documentation>The key under .mock.</xs:documentation>
@@ -591,10 +654,37 @@
 		<xs:annotation>
 			<xs:documentation>One file the mock writes. The text is the body, empty by default, because a build tool reads the timestamp.</xs:documentation>
 		</xs:annotation>
-		<xs:group ref="placeholders" minOccurs="0" maxOccurs="unbounded"/>
-		<xs:attribute name="path" type="template" use="required">
+		<xs:choice minOccurs="0" maxOccurs="unbounded">
+			<xs:group ref="placeholders"/>
+			<xs:element name="path" type="templateText">
+				<xs:annotation>
+					<xs:documentation>The element form of path=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="when" type="templateText">
+				<xs:annotation>
+					<xs:documentation>The element form of when=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="over" type="templateText">
+				<xs:annotation>
+					<xs:documentation>The element form of over=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="from" type="templateText">
+				<xs:annotation>
+					<xs:documentation>The element form of from=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="mode" type="templateText">
+				<xs:annotation>
+					<xs:documentation>The element form of mode=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:choice>
+		<xs:attribute name="path" type="template">
 			<xs:annotation>
-				<xs:documentation>Where the file lands.</xs:documentation>
+				<xs:documentation>Where the file lands. It, or a path element, is required.</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
 		<xs:attribute name="when" type="template">
@@ -619,7 +709,7 @@
 		</xs:attribute>
 		<xs:attribute name="mode" type="xs:token">
 			<xs:annotation>
-				<xs:documentation>The file mode in octal. The default is 0644.</xs:documentation>
+				<xs:documentation>The file mode in octal, as a template. The default is 0644.</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
 	</xs:complexType>
@@ -628,10 +718,22 @@
 		<xs:annotation>
 			<xs:documentation>One line appended per call. The default body is a compile_commands.json entry, so a build writes its own compilation database.</xs:documentation>
 		</xs:annotation>
-		<xs:group ref="placeholders" minOccurs="0" maxOccurs="unbounded"/>
-		<xs:attribute name="path" type="template" use="required">
+		<xs:choice minOccurs="0" maxOccurs="unbounded">
+			<xs:group ref="placeholders"/>
+			<xs:element name="path" type="templateText">
+				<xs:annotation>
+					<xs:documentation>The element form of path=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="when" type="templateText">
+				<xs:annotation>
+					<xs:documentation>The element form of when=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:choice>
+		<xs:attribute name="path" type="template">
 			<xs:annotation>
-				<xs:documentation>The file the line is appended to.</xs:documentation>
+				<xs:documentation>The file the line is appended to. It, or a path element, is required.</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
 		<xs:attribute name="when" type="template">
@@ -645,9 +747,16 @@
 		<xs:annotation>
 			<xs:documentation>The one file a group of parts becomes. Each part keeps its own to, and the join concatenates them.</xs:documentation>
 		</xs:annotation>
-		<xs:attribute name="to" type="template" use="required">
+		<xs:all>
+			<xs:element name="to" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of to=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:all>
+		<xs:attribute name="to" type="template">
 			<xs:annotation>
-				<xs:documentation>The output file.</xs:documentation>
+				<xs:documentation>The output file. It, or a to element, is required.</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
 		<xs:attribute name="cleanup" type="bool">
@@ -746,60 +855,72 @@
 		</xs:complexContent>
 	</xs:complexType>
 
-	<xs:complexType name="fieldByPath">
+	<xs:complexType name="fieldByBody" mixed="true">
 		<xs:annotation>
-			<xs:documentation>A field read from the record. The body is a record-relative path, such as "user.login" or "assets.0.name".</xs:documentation>
+			<xs:documentation>A field read from the record, or computed by an expr element. The text is a record-relative path, such as "user.login" or "assets.0.name". With an expr element, the field has no path. A reader rejects a field with both, or with neither.</xs:documentation>
 		</xs:annotation>
-		<xs:simpleContent>
-			<xs:extension base="path">
-				<xs:attribute name="name" type="nonEmpty" use="required">
-					<xs:annotation>
-						<xs:documentation>The column heading or key.</xs:documentation>
-					</xs:annotation>
-				</xs:attribute>
-				<xs:attribute name="default" type="xs:string">
-					<xs:annotation>
-						<xs:documentation>The text for an empty value.</xs:documentation>
-					</xs:annotation>
-				</xs:attribute>
-				<xs:attribute name="truncate" type="xs:integer">
-					<xs:annotation>
-						<xs:documentation>Cap the value at this many characters.</xs:documentation>
-					</xs:annotation>
-				</xs:attribute>
-				<xs:attribute name="firstline" type="bool">
-					<xs:annotation>
-						<xs:documentation>Keep only the first line.</xs:documentation>
-					</xs:annotation>
-				</xs:attribute>
-				<xs:attribute name="priority" type="xs:integer">
-					<xs:annotation>
-						<xs:documentation>The lowest priority column drops first when a table is too narrow. The default is 0.</xs:documentation>
-					</xs:annotation>
-				</xs:attribute>
-				<xs:attribute name="show_in" type="xs:token">
-					<xs:annotation>
-						<xs:documentation>The sinks that show the field: "*" for all, "json,csv" for only those, "!json" for all but that.</xs:documentation>
-					</xs:annotation>
-				</xs:attribute>
-				<xs:attribute name="expr" use="prohibited"/>
-			</xs:extension>
-		</xs:simpleContent>
+		<xs:sequence>
+			<xs:element name="expr" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of expr=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="name" type="nonEmpty" use="required">
+			<xs:annotation>
+				<xs:documentation>The column heading or key.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="default" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>The text for an empty value.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="truncate" type="xs:integer">
+			<xs:annotation>
+				<xs:documentation>Cap the value at this many characters.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="firstline" type="bool">
+			<xs:annotation>
+				<xs:documentation>Keep only the first line.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="priority" type="xs:integer">
+			<xs:annotation>
+				<xs:documentation>The lowest priority column drops first when a table is too narrow. The default is 0.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="show_in" type="xs:token">
+			<xs:annotation>
+				<xs:documentation>The sinks that show the field: "*" for all, "json,csv" for only those, "!json" for all but that.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
 	</xs:complexType>
 
 	<xs:complexType name="fields">
 		<xs:annotation>
 			<xs:documentation>The output shape, drawn as a table, list, json, csv and more. Every block whose when= holds renders, in order.</xs:documentation>
 		</xs:annotation>
-		<xs:sequence>
+		<xs:all>
 			<xs:element name="field" minOccurs="0" maxOccurs="unbounded">
 				<xs:annotation>
-					<xs:documentation>One column. expr= computes it. Otherwise the body is a path.</xs:documentation>
+					<xs:documentation>One column. expr= or an expr element computes it. Otherwise the body is a path.</xs:documentation>
 				</xs:annotation>
 				<xs:alternative test="@expr" type="fieldByExpr"/>
-				<xs:alternative type="fieldByPath"/>
+				<xs:alternative type="fieldByBody"/>
 			</xs:element>
-		</xs:sequence>
+			<xs:element name="footer" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of footer=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="when" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of when=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:all>
 		<xs:attribute name="over" type="path">
 			<xs:annotation>
 				<xs:documentation>Where the records live: read against the body first, then the whole context.</xs:documentation>
@@ -821,6 +942,18 @@
 		<xs:annotation>
 			<xs:documentation>A computed part of a list item.</xs:documentation>
 		</xs:annotation>
+		<xs:all>
+			<xs:element name="last" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of last=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="truncate" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of truncate=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:all>
 		<xs:attribute name="name" type="nonEmpty" use="required">
 			<xs:annotation>
 				<xs:documentation>The property of the item template.</xs:documentation>
@@ -848,35 +981,47 @@
 		</xs:attribute>
 	</xs:complexType>
 
-	<xs:complexType name="tmlFieldByPath">
+	<xs:complexType name="tmlFieldByBody" mixed="true">
 		<xs:annotation>
-			<xs:documentation>A part of a list item, read from the element. The body is a path inside the element.</xs:documentation>
+			<xs:documentation>A part of a list item, read from the element, or computed by an expr element. The text is a path inside the element. With an expr element, the field has no path.</xs:documentation>
 		</xs:annotation>
-		<xs:simpleContent>
-			<xs:extension base="path">
-				<xs:attribute name="name" type="nonEmpty" use="required">
-					<xs:annotation>
-						<xs:documentation>The property of the item template.</xs:documentation>
-					</xs:annotation>
-				</xs:attribute>
-				<xs:attribute name="expr" use="prohibited"/>
-				<xs:attribute name="lines" type="bool">
-					<xs:annotation>
-						<xs:documentation>Cut the value into a list of lines.</xs:documentation>
-					</xs:annotation>
-				</xs:attribute>
-				<xs:attribute name="last" type="xs:token">
-					<xs:annotation>
-						<xs:documentation>Keep this many of the last lines. A template.</xs:documentation>
-					</xs:annotation>
-				</xs:attribute>
-				<xs:attribute name="truncate" type="xs:token">
-					<xs:annotation>
-						<xs:documentation>Clip each line to this many cells, ellipsis included. A template.</xs:documentation>
-					</xs:annotation>
-				</xs:attribute>
-			</xs:extension>
-		</xs:simpleContent>
+		<xs:all>
+			<xs:element name="expr" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of expr=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="last" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of last=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="truncate" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of truncate=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:all>
+		<xs:attribute name="name" type="nonEmpty" use="required">
+			<xs:annotation>
+				<xs:documentation>The property of the item template.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="lines" type="bool">
+			<xs:annotation>
+				<xs:documentation>Cut the value into a list of lines.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="last" type="xs:token">
+			<xs:annotation>
+				<xs:documentation>Keep this many of the last lines. A template.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="truncate" type="xs:token">
+			<xs:annotation>
+				<xs:documentation>Clip each line to this many cells, ellipsis included. A template.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
 	</xs:complexType>
 
 	<xs:complexType name="propOver">
@@ -889,7 +1034,7 @@
 					<xs:documentation>One part of each item. A list prop needs at least one.</xs:documentation>
 				</xs:annotation>
 				<xs:alternative test="@expr" type="tmlFieldByExpr"/>
-				<xs:alternative type="tmlFieldByPath"/>
+				<xs:alternative type="tmlFieldByBody"/>
 			</xs:element>
 		</xs:sequence>
 		<xs:attribute name="name" type="nonEmpty" use="required">
@@ -977,7 +1122,14 @@
 		<xs:annotation>
 			<xs:documentation>One rendering of a format. The text is the template.</xs:documentation>
 		</xs:annotation>
-		<xs:group ref="placeholders" minOccurs="0" maxOccurs="unbounded"/>
+		<xs:choice minOccurs="0" maxOccurs="unbounded">
+			<xs:group ref="placeholders"/>
+			<xs:element name="when" type="templateText">
+				<xs:annotation>
+					<xs:documentation>The element form of when=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:choice>
 		<xs:attribute name="name" type="nonEmpty" use="required">
 			<xs:annotation>
 				<xs:documentation>The name --view selects it by.</xs:documentation>
@@ -1000,13 +1152,18 @@
 			<xs:documentation>The legacy presentation: templates in place of fields. A leaf uses fields or format, never both.</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
-			<xs:sequence>
+			<xs:all>
 				<xs:element name="view" type="view" minOccurs="0" maxOccurs="unbounded">
 					<xs:annotation>
 						<xs:documentation>One rendering.</xs:documentation>
 					</xs:annotation>
 				</xs:element>
-			</xs:sequence>
+				<xs:element name="when" type="templateText" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>The element form of when=.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:all>
 			<xs:attribute name="name" type="nonEmpty">
 				<xs:annotation>
 					<xs:documentation>The name a ref= selects a top-level format by.</xs:documentation>
@@ -1083,6 +1240,13 @@
 		<xs:annotation>
 			<xs:documentation>A positional argument, at .arg.NAME.</xs:documentation>
 		</xs:annotation>
+		<xs:all>
+			<xs:element name="pattern" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of pattern=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:all>
 		<xs:attribute name="name" type="nonEmpty" use="required">
 			<xs:annotation>
 				<xs:documentation>The key under .arg.</xs:documentation>
@@ -1207,6 +1371,13 @@
 		</xs:annotation>
 		<xs:complexContent>
 			<xs:extension base="flagAttrs">
+				<xs:all>
+					<xs:element name="default" type="templateText" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>The element form of default=.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:all>
 				<xs:attribute name="default" type="xs:string">
 					<xs:annotation>
 						<xs:documentation>The value when the flag is absent. A template. A string-slice default is a comma-separated list.</xs:documentation>
@@ -1284,6 +1455,21 @@
 			<xs:element name="stdin" type="content" minOccurs="0">
 				<xs:annotation>
 					<xs:documentation>The stdin for this step.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="when" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of when=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="over" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of over=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="until" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of until=.</xs:documentation>
 				</xs:annotation>
 			</xs:element>
 		</xs:all>
