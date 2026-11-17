@@ -753,6 +753,11 @@
 					<xs:documentation>The element form of to=.</xs:documentation>
 				</xs:annotation>
 			</xs:element>
+			<xs:element name="run" type="runCommand" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A program that makes the output from the joined parts. It sees the group's record, plus .join.input (the joined parts, a temporary file) and .join.output (the file it must write). The output gets its real name only when the program exits 0. A program that fails fails its group and keeps the parts.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:all>
 		<xs:attribute name="to" type="template">
 			<xs:annotation>
