@@ -1282,7 +1282,47 @@
 				<xs:documentation>The help text.</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
+		<xs:attributeGroup ref="inputHints"/>
 	</xs:complexType>
+
+	<xs:simpleType name="choiceList">
+		<xs:annotation>
+			<xs:documentation>A comma-separated list of the values an input takes. Each one is listed once, and an int input lists integers.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:token">
+			<xs:pattern value="[^,]+(,[^,]+)*"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="commandPath">
+		<xs:annotation>
+			<xs:documentation>A command that runs, named by the words a user types after the program name, such as "repos list".</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:token">
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:attributeGroup name="inputHints">
+		<xs:annotation>
+			<xs:documentation>What an arg or a flag says about its values, beyond its type.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="choices" type="choiceList">
+			<xs:annotation>
+				<xs:documentation>The closed set of values the input takes. Every reader rejects any other value. A bool takes none, and a flag's default is one of them.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="suggest" type="commandPath">
+			<xs:annotation>
+				<xs:documentation>A command whose result lists likely values. An interactive reader runs it on request and offers what it lists. It is advice, not validation. A bool takes none.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="suggest-field" type="path">
+			<xs:annotation>
+				<xs:documentation>The record path that holds the value in each record suggest= lists. Without it, a reader takes the field named like the input, then a name or an id.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:attributeGroup>
 
 	<xs:simpleType name="shortFlag">
 		<xs:annotation>
@@ -1338,6 +1378,7 @@
 				<xs:documentation>The help text.</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
+		<xs:attributeGroup ref="inputHints"/>
 	</xs:complexType>
 
 	<xs:complexType name="flagOfInt">
@@ -1594,6 +1635,100 @@
 		</xs:restriction>
 	</xs:simpleType>
 
+	<xs:complexType name="tui">
+		<xs:annotation>
+			<xs:documentation>How an interactive reader shows a command. A reader infers every hint that is absent. A group takes only label= and hidden=, because the rest describe a result.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="link" type="tuiLink" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>A command that a record of this command's result opens. The first link is the one enter follows.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="label" type="nonEmpty">
+			<xs:annotation>
+				<xs:documentation>The name the command tree shows in place of the command's own.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="hidden" type="bool">
+			<xs:annotation>
+				<xs:documentation>Leave the node and its subtree out of the command tree. It still runs from the command line, and a link may still name it.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="autorun" type="bool">
+			<xs:annotation>
+				<xs:documentation>Run the command as soon as it is picked, once every required input holds a value. Meant for a read-only listing.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="rows" type="path">
+			<xs:annotation>
+				<xs:documentation>The path inside the result to the list of records. Without it, a reader takes a plain path in fields over=, then the one key of an object that holds a list of records.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="columns" type="xs:token">
+			<xs:annotation>
+				<xs:documentation>A comma-separated list of record paths, one column each, in order. Without it, a reader takes the fields the first fields block lists, then infers them from the records.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="title" type="path">
+			<xs:annotation>
+				<xs:documentation>The record path that names a record, such as in a breadcrumb.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="tuiLink">
+		<xs:annotation>
+			<xs:documentation>Open another command from a record. An input that no with names takes the record field of its name, then the value the user typed for that name.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="with" type="tuiWith" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>One input of the target, from the record.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="to" type="commandPath" use="required">
+			<xs:annotation>
+				<xs:documentation>The command the link opens. It must run.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="label" type="nonEmpty">
+			<xs:annotation>
+				<xs:documentation>What the link is called. The default is the target's path.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="tuiWith">
+		<xs:annotation>
+			<xs:documentation>Fill one arg or flag of a link's target. It takes field= or expr=, exactly one.</xs:documentation>
+		</xs:annotation>
+		<xs:all>
+			<xs:element name="expr" type="templateText" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The element form of expr=.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:all>
+		<xs:attribute name="name" type="nonEmpty" use="required">
+			<xs:annotation>
+				<xs:documentation>An arg or a flag the target declares.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="field" type="path">
+			<xs:annotation>
+				<xs:documentation>The record path that holds the value.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="expr" type="template">
+			<xs:annotation>
+				<xs:documentation>A template, with the record's keys at the top level and the source form's values at .input.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
 	<xs:complexType name="command">
 		<xs:annotation>
 			<xs:documentation>A node of the command tree. A leaf runs. A parent groups its subcommands, and runs too with runnable="true".</xs:documentation>
@@ -1659,6 +1794,11 @@
 			<xs:element name="mock" type="mock" minOccurs="0">
 				<xs:annotation>
 					<xs:documentation>A stand-in for a program, as the leaf's action.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="tui" type="tui" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Hints for an interactive reader. It does not inherit, and it changes nothing about a run.</xs:documentation>
 				</xs:annotation>
 			</xs:element>
 			<xs:element ref="command" minOccurs="0" maxOccurs="unbounded"/>
