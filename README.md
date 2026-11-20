@@ -54,6 +54,21 @@ The attribute inherits like `<confirm>` does, so one `watch=` on a group covers 
 
 A node whose action is a `<download>` never repeats, because a transfer is one thing. A reader rejects `watch=` on such a node at load time. A node that reaches a `<download>` by inheritance alone is fine: the reader ignores the interval there and says so. A tool call over MCP is one run, and a reader ignores the interval there too.
 
+## Choices
+
+`choices="open,closed,all"` on an `<arg>` or a `<flag>` is the closed set of values the input takes. Every reader enforces it: the command line rejects any other value, and a tool schema publishes the set as an `enum`. A value the caller left out is not checked, so an optional input still falls back to its default. A flag's default must be one of the choices. A bool takes none. Each value of a variadic arg or a `string-slice` flag is checked on its own.
+
+## Interactive hints
+
+An interactive reader, such as api-cli's `tui` subcommand, shows the command tree and a result browser. It works with no hints at all. It infers the columns of a table, the record list inside an envelope, and the links from one command to another. A `<tui>` element on a command corrects what it inferred. It does not inherit, and it changes nothing about a run.
+
+- `label=` names the node in the tree, and `hidden="true"` leaves the node and its subtree out. A hidden command still runs, and a link may still name it.
+- `autorun="true"` runs a command as soon as it is picked, once every required input holds a value.
+- `rows=` is the path to the list of records inside a result. `columns=` lists the record paths to show, in order. `title=` is the record path that names a record.
+- `<link to="repos view">` opens another command from a record. Each `<with name=>` fills one input of the target. That `<with name=>` is from a record path (`field=`) or a template (`expr=`) that sees the record's keys and. That `<with name=>` is at `.input`, the values typed into the source form. An input no `<with>` names takes the record field of its own name, then the value the user typed for that name in any command.
+
+`suggest="repos list"` on an `<arg>` or a `<flag>` names a command whose result lists likely values for it. `suggest-field=` is the record path that holds each value. A suggestion is advice and never validation.
+
 ## What the language looks like
 
 The root is `<config name="...">`. It holds commands. A command runs a shell command, an argv list, or an HTTP request. It may also declare args, flags, vars, steps, an output shape, and subcommands.
@@ -64,7 +79,7 @@ Element content mixes text with three placeholders:
 - `<if test="path" eq="literal">...<else/>...</if>` branches.
 - `<for each="path">...</for>` repeats, rebinding `.` to each element.
 
-`testdata/` is the tour: `minimal`, `placeholders`, `request`, `transports`, `downloads`, `join-and-poll`, `fields`, `tml`, `watch`, `formats`, `tree`, `group`, and `unordered`.
+`testdata/` is the tour: `minimal`, `placeholders`, `request`, `transports`, `downloads`, `join-and-poll`, `fields`, `tml`, `watch`, `formats`, `tree`, `group`, `tui`, and `unordered`.
 
 ## A template attribute has an element form
 
@@ -118,6 +133,10 @@ These rules are part of the language. A conforming reader must reject a document
 | `passthrough="true"` is leaf-only, and takes no args | It reads the node's children. |
 | A variadic arg comes last, and a required arg never follows an optional one | Order among siblings of one name. |
 | `conflicts=` names a flag on the same node | It reads the sibling flags. |
+| `choices=` lists each value once, an int input lists integers, a bool takes none, and a flag's default is a choice | It reads the input's type and compares values. |
+| `suggest=` and a `<link to=>` name a command that runs | They name a node by its path, across the whole tree. |
+| A `<with name=>` names an input of the link's target, once per link, with `field=` or `expr=` but not both | It reads the target's args and flags. |
+| A `<tui>` on a group takes only `label=` and `hidden=` | It reads whether the node runs. |
 | `transport=` names a declared transport | The name `http` is legal and declares nothing, so an `xs:keyref` rejects a correct document. |
 | At most one transport is the default | "At most one true" is not a uniqueness constraint. |
 | `allow-status=` needs the default transport | It reads which transport the request resolves to. |
