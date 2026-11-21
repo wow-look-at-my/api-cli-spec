@@ -1,0 +1,26 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!--
+	<tui> does not inherit and changes nothing about a run, so every node
+	resolves exactly as it would without it. /debug is hidden from an
+	interactive tree, and it still runs.
+-->
+<resolved config="tui">
+	<command path="/repos" runs="false">
+		<run from="/" kind="request"/>
+	</command>
+	<command path="/repos/list" runs="true">
+		<run from="/" kind="request"/>
+	</command>
+	<command path="/repos/view" runs="true">
+		<run from="/" kind="request"/>
+	</command>
+	<command path="/issues" runs="false">
+		<run from="/" kind="request"/>
+	</command>
+	<command path="/issues/list" runs="true">
+		<run from="/" kind="request"/>
+	</command>
+	<command path="/debug" runs="true">
+		<run from="/" kind="request"/>
+	</command>
+</resolved>

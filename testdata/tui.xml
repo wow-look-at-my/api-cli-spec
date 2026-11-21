@@ -1,0 +1,56 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!--
+	The hints an interactive reader uses. A listing runs as soon as it is
+	picked, and each of its records opens the detail command. The detail
+	command's repo arg lists its likely values from the listing. A flag takes
+	a closed set of values, which every reader enforces. One command stays out
+	of the tree, and one shows under another name.
+-->
+<config name="tui">
+	<run>
+		<request>
+			<url>https://example.invalid/<value name="entry.path"/></url>
+		</request>
+	</run>
+	<command name="repos" description="Repositories.">
+		<tui label="Repositories"/>
+		<command name="list" description="One owner's repositories.">
+			<arg name="owner" required="true"/>
+			<flag name="state" choices="open,closed,all" default="open"/>
+			<entry>
+				<path>repos</path>
+			</entry>
+			<tui autorun="true" rows="items" columns="name,stars,owner.login" title="full_name">
+				<link to="repos view" label="Open">
+					<with name="owner" field="owner.login"/>
+					<with name="repo" field="name"/>
+				</link>
+				<link to="issues list">
+					<with name="repo" expr="{{ .owner.login }}/{{ .name }}"/>
+				</link>
+			</tui>
+		</command>
+		<command name="view" description="One repository.">
+			<arg name="owner" required="true"/>
+			<arg name="repo" required="true" suggest="repos list" suggest-field="name"/>
+			<entry>
+				<path>repo</path>
+			</entry>
+		</command>
+	</command>
+	<command name="issues">
+		<command name="list" description="Issues of one repository.">
+			<flag name="repo" required="true"/>
+			<flag name="limit" type="int" choices="10,50,100"/>
+			<entry>
+				<path>issues</path>
+			</entry>
+		</command>
+	</command>
+	<command name="debug" description="Internal checks.">
+		<tui hidden="true"/>
+		<entry>
+			<path>debug</path>
+		</entry>
+	</command>
+</config>
