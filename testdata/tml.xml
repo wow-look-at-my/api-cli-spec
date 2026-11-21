@@ -1,5 +1,5 @@
 <?xml version="1.1" encoding="UTF-8"?>
-<!-- A screen: one prop of each of the three kinds. -->
+<!-- A screen: one prop of each kind. scroll= and select= hold state the reader keeps while the screen is live. -->
 <config name="tml">
 	<command name="board" description="Draw the queue as a board.">
 		<run>
@@ -15,6 +15,8 @@
 				<field name="tail" lines="true" last="3" truncate="60">log</field>
 				<field name="label" expr="{{ .name }} ({{ .state }})"/>
 			</prop>
+			<prop name="offset" scroll="cards"/>
+			<prop name="picked" select="cards"/>
 		</tml>
 	</command>
 </config>
