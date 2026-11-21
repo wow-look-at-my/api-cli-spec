@@ -69,6 +69,10 @@ An interactive reader, such as api-cli's `tui` subcommand, shows the command tre
 
 `suggest="repos list"` on an `<arg>` or a `<flag>` names a command whose result lists likely values for it. `suggest-field=` is the record path that holds each value. A suggestion is advice and never validation.
 
+## Live screens
+
+A `<tml>` screen under `watch=` is live: the reader draws the component itself, so its controls take focus and clicks. Prop sources hold state the reader keeps between runs, rather than read from a result. `<prop name="offset" scroll="log"/>` is how far the user scrolled the element with id `log`. `<prop name="picked" select="jobs"/>` is the row the user picked in the list or table with id `jobs`. Both start at 0, and both hold 0 in a one-shot frame. An element with `action="refresh"` runs the node again when the user activates it.
+
 ## What the language looks like
 
 The root is `<config name="...">`. It holds commands. A command runs a shell command, an argv list, or an HTTP request. It may also declare args, flags, vars, steps, an output shape, and subcommands.

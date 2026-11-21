@@ -1072,6 +1072,42 @@
 		<xs:attribute name="over" use="prohibited"/>
 	</xs:complexType>
 
+	<xs:complexType name="propScroll">
+		<xs:annotation>
+			<xs:documentation>A prop the reader keeps: how far the user scrolled the element with this id. It starts at 0, and the wheel and the page keys move it while the screen is live. A one-shot frame holds 0.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="name" type="nonEmpty" use="required">
+			<xs:annotation>
+				<xs:documentation>The component property it sets: bind it to the element's offset.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="scroll" type="nonEmpty" use="required">
+			<xs:annotation>
+				<xs:documentation>The id of the element the user scrolls.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="from" use="prohibited"/>
+		<xs:attribute name="over" use="prohibited"/>
+	</xs:complexType>
+
+	<xs:complexType name="propSelect">
+		<xs:annotation>
+			<xs:documentation>A prop the reader keeps: the row the user picked in the element with this id. It starts at 0, the arrows move it while the element has focus, and a click picks a row. A one-shot frame holds 0.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="name" type="nonEmpty" use="required">
+			<xs:annotation>
+				<xs:documentation>The component property it sets: bind it to the element's selected.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="select" type="nonEmpty" use="required">
+			<xs:annotation>
+				<xs:documentation>The id of the list or table the user picks a row in.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="from" use="prohibited"/>
+		<xs:attribute name="over" use="prohibited"/>
+	</xs:complexType>
+
 	<xs:complexType name="propText" mixed="true">
 		<xs:annotation>
 			<xs:documentation>A prop whose value is its own text, rendered as a template.</xs:documentation>
@@ -1093,10 +1129,12 @@
 		<xs:sequence>
 			<xs:element name="prop" minOccurs="0" maxOccurs="unbounded">
 				<xs:annotation>
-					<xs:documentation>One component property. over= makes a list, from= reads a path, and otherwise the text is the value.</xs:documentation>
+					<xs:documentation>One component property. over= makes a list, from= reads a path, scroll= and select= are state the reader keeps, and otherwise the text is the value.</xs:documentation>
 				</xs:annotation>
 				<xs:alternative test="@over" type="propOver"/>
 				<xs:alternative test="@from" type="propFrom"/>
+				<xs:alternative test="@scroll" type="propScroll"/>
+				<xs:alternative test="@select" type="propSelect"/>
 				<xs:alternative type="propText"/>
 			</xs:element>
 		</xs:sequence>
