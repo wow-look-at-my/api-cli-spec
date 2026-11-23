@@ -13,7 +13,7 @@
 			<field name="Summary" firstline="true" show_in="table,list">body</field>
 			<field name="Link" priority="9" expr="{{ $.var.base }}/r/{{ .id }}"/>
 		</fields>
-		<fields over="data" when="{{ not .tty }}">
+		<fields over="data" on-missing="empty" when="{{ not .tty }}">
 			<field name="id">id</field>
 		</fields>
 	</command>

@@ -931,6 +931,17 @@
 				<xs:documentation>Where the records live: read against the body first, then the whole context.</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
+		<xs:attribute name="on-missing">
+			<xs:annotation>
+				<xs:documentation>An over= path that names nothing or null: "fail" stops the run, "empty" reads it as an empty list. The default is fail. empty needs over=.</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:token">
+					<xs:enumeration value="fail"/>
+					<xs:enumeration value="empty"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
 		<xs:attribute name="footer" type="template">
 			<xs:annotation>
 				<xs:documentation>A line printed after the records.</xs:documentation>
