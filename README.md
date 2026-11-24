@@ -70,6 +70,17 @@ A node whose action is a `<download>` never repeats, because a transfer is one t
 | `lines` | A list of strings, one per line. |
 | `text` | One string, without the trailing line breaks. |
 
+Under `auto`, these media types name a format. A reader compares the type without its parameters, in any letter case.
+
+| `Content-Type` | Format |
+|---|---|
+| `text/csv`, `application/csv` | `csv` |
+| `text/tab-separated-values` | `tsv` |
+| `application/xml`, `text/xml`, and any type that ends in `+xml` | `xml` |
+| `application/x-www-form-urlencoded` | `form` |
+
+Every other type takes the second rule of `auto`, and so does a body that does not read as its type says.
+
 A named format is a claim. Output that is not in that format fails the run, and a reader shows the start of the output. `auto` is a guess. It never fails: output that no format reads is text.
 
 The attribute belongs to the run and travels with it. A node that inherits a run inherits its format. A node that declares its own run takes the format of that run, and a run that names none is `auto`. A step with its own `<run>` follows the same rule, and a step without one reads the output as the node's run says.
