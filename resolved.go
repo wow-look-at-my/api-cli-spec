@@ -1,3 +1,5 @@
+// resolved.go holds ParseResolved.
+
 package spec
 
 import (
