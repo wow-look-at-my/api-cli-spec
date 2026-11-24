@@ -18,11 +18,11 @@ xml-validator --schema api-cli.xsd path/to/api.xml
 go-toolchain
 ```
 
-Each document under `testdata/` has a partner of the same name under `testdata/resolved/`. A file on either side with no partner fails the run, so a document cannot arrive without its meaning. CI validates the first directory against `api-cli.xsd` and the second against `resolved.xsd`, by running `xml-validator` itself.
+Each document under `testdata/` has a partner of the same name under `testdata/resolved/`. A file on either side with no partner fails the run. A document cannot arrive without its meaning. CI validates the first directory against `api-cli.xsd` and the second against `resolved.xsd`, by running `xml-validator` itself.
 
 The test that carries the weight resolves each document with `Resolve`. It compares the result against the partner file, on the values alone: attribute order and whitespace carry nothing. That comparison is the only place the resolution rules are executable. A schema states what a document may contain, and the rules below state what it means.
 
-There is no rejection corpus, on purpose. A document the schema refuses states nothing the schema does not already state itself. It is the same rule written twice in two files. Nothing loosens an `xs:element` by accident either. An XSD is declarative and hand-written, so a rule changes only when somebody changes it, deliberately.
+There is no rejection corpus, on purpose. A document the schema refuses states nothing the schema does not already state itself. It is the same rule written twice in multiple files. Nothing loosens an `xs:element` by accident either. An XSD is declarative and hand-written, so a rule changes only when somebody changes it, deliberately.
 
 ## Conformance
 
@@ -35,14 +35,14 @@ A second implementation reads a document, emits the resolved form, and compares 
 A document states each setting where an author wrote it. A command's effective settings come from walking its ancestors, so the answer appears in no single place in the source. These are the rules the suite runs.
 
 - **A node runs** when it is a leaf, or when it declares `runnable="true"`.
-- **`<run>`, `<cwd>`, `<stdin>`, `<confirm>`, `<format>` and `watch=` inherit.** A node's effective value is its own declaration, or the nearest ancestor's, or none. The document root is an ancestor of every top-level command.
-- **A `<run>` replaces an inherited one entirely.** It is one of three things, and the nearest declaration decides which.
-- **`<preconditions>` accumulate instead of overriding.** A node runs every guard its ancestors declared, in document order, and then its own. A guard on the root therefore gates every run in the tree, and a guard on a group node gates its subtree.
+- A node's effective value is its own declaration, or the nearest ancestor's, or none. The document root is an ancestor of every top-level command.
+- **A `<run>` replaces an inherited one fully.** It is one of three things, and the nearest declaration decides which.
+- **`<preconditions>` collect instead of overriding.** A node runs every guard its ancestors declared, in document order, and then its own. A guard on the root therefore gates every run in the tree, and a guard on a group node gates its subtree.
 - **A `<download>` node needs no run.** Its declarations are the action, and they follow the node's steps.
 - **A `<transport>` owns its `<cwd>` and `<stdin>`.** Those belong to the transport's program, and no command inherits them.
 - **A var or a flag is visible to the node that declares it and to that node's descendants.** `testdata/tree.xml` reads a parent's var from a child, so the corpus already commits to this.
 
-A resolved file names the node each winning value came from. That is what a reader has to get right. It is also the one thing the source document never writes down.
+A resolved file names the node each winning value came from. That is what a reader has to get right. It is also the thing the source document never writes down.
 
 ## Watch
 
@@ -101,7 +101,7 @@ A `<tml>` screen under `watch=` is live: the reader draws the component itself, 
 
 The root is `<config name="...">`. It holds commands. A command runs a shell command, an argv list, or an HTTP request. It may also declare args, flags, vars, steps, an output shape, and subcommands.
 
-Element content mixes text with three placeholders:
+Element content mixes text with multiple placeholders:
 
 - `<value name="var.x" default="d" as="f"/>` reads a context path. `<value expr="{{ . }}"/>` is a verbatim template instead, and `<value><expr>{{ . }}</expr></value>` is the same template in its element form.
 - `<if test="path" eq="literal">...<else/>...</if>` branches.
@@ -111,7 +111,7 @@ Element content mixes text with three placeholders:
 
 ## A template attribute has an element form
 
-Every attribute that holds a template, such as `when=`, `expr=`, `jq=`, `over=` or `path=`, can be a child element of the same name instead. `testdata/template-elements.xml` shows each one. A long template then spreads over indented lines.
+Every attribute that holds a template can be a child element of the same name instead. `testdata/template-elements.xml` shows each one. A long template then spreads over indented lines.
 
 - Plain text is cut into lines. Each line loses its surrounding whitespace, and the lines join with nothing between them.
 - A CDATA section is kept as written, with its spaces and newlines.
@@ -131,7 +131,7 @@ Every attribute that holds a template, such as `when=`, `expr=`, `jq=`, `over=` 
 
 That footer means exactly what `footer="{{ len .data.items }} shown, {{ .data.total }} in all"` means. A line break therefore goes where the template needs no space, and a space at either end of a piece goes in CDATA.
 
-The element content types that hold templates already, such as `<url>`, `<header>`, `<body>` and `<confirm>`, keep their own rules. Their text mixes with placeholders, and inline whitespace in it is content.
+The element content types that hold templates already keep their own rules. Their text mixes with placeholders, and inline whitespace in it is content.
 
 ## Child elements are order-free
 
@@ -149,8 +149,6 @@ These rules are part of the language. A conforming reader must reject a document
 |---|---|
 | `<entry>` holds an object whose keys are the author's own element names | An open wildcard needs `processContents="lax"`, which xml-validator refuses by design. Nothing constrains an `<entry>` subtree, so no schema can describe it. |
 | A leaf needs a run, its own or an ancestor's | It reads the ancestor chain. |
-| `<download>`, `<fields>`, `<steps>` and `<entry>` need a node that runs | They read whether the node has subcommands. |
-| `<fields>` and `<format>`, or `<tml>` and `<fields>`, are exclusive | Two sibling elements, not one element's attributes. |
 | `<download>` takes neither `<fields>` nor `<format>` | The same. |
 | A `<download>` node declares no `watch=` | An attribute and a child element of the same node. |
 | A `watch=` is at or above the reader's floor | The floor belongs to the reader, and a pattern cannot compare a duration. |
@@ -170,7 +168,7 @@ These rules are part of the language. A conforming reader must reject a document
 | `allow-status=` needs the default transport | It reads which transport the request resolves to. |
 | A precondition cannot read `.result` | It reads the template body. |
 | A template attribute and its element form are exclusive, and the element appears at most once | An attribute and a child element of the same node. |
-| `path=` on `<output>` and `<record>`, and `to=` on `<join>`, come as the attribute or as the element | The same. |
+| `path=` on `<join>`, come as the attribute or as the element | The same. |
 | A field with an `<expr>` element has no path text, and a field without one has a path | Text and a child element of the same node. |
 | `<confirm>` and `confirm=` on one command are exclusive | An attribute and a child element of the same node. |
 | `<format ref=>` names a declared format | The reference crosses from a command to the top-level `<formats>`, past the subtree an identity constraint selects over. |
