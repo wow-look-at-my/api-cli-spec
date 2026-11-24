@@ -19,10 +19,12 @@ type Setting struct {
 	Value string
 }
 
-// A Run is the effective run: where it was declared, and what kind it is.
+// A Run is the effective run: where it was declared, what kind it is, and the
+// format it declares for its output. An empty Decode means "auto".
 type Run struct {
-	From string
-	Kind string
+	From   string
+	Kind   string
+	Decode string
 }
 
 // A Command is a node of the tree, with every setting resolved.
@@ -129,7 +131,8 @@ func declarations(node *validator.Element, path string, inherited settings) sett
 	for _, child := range node.ChildElements() {
 		switch child.Local {
 		case "run":
-			out.run = &Run{From: path, Kind: runKind(child)}
+			decode, _ := child.Attr("decode")
+			out.run = &Run{From: path, Kind: runKind(child), Decode: decode}
 		case "cwd":
 			out.cwd = &Setting{From: path, Value: strings.TrimSpace(child.TextContent())}
 		case "stdin":

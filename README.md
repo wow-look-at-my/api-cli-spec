@@ -54,6 +54,30 @@ The attribute inherits like `<confirm>` does, so one `watch=` on a group covers 
 
 A node whose action is a `<download>` never repeats, because a transfer is one thing. A reader rejects `watch=` on such a node at load time. A node that reaches a `<download>` by inheritance alone is fine: the reader ignores the interval there and says so. A tool call over MCP is one run, and a reader ignores the interval there too.
 
+## Decode
+
+`decode="csv"` on a `<run>` names the format of the output that run produces. A reader turns the output into data in that format. Every part of the language that reads the data then sees the same value. The language itself is tied to no one format.
+
+| Value | The data a reader produces |
+|---|---|
+| `auto` | The default. A response follows its `Content-Type`. Any other output is JSON when it parses, and the trimmed text when it does not. |
+| `json` | One JSON value. |
+| `ndjson` | A list, one JSON value per line. A blank line is skipped. |
+| `csv`, `tsv` | A list of records. The first row names the columns, and every cell is a string. |
+| `yaml` | One YAML document. A stream of several documents is a list. |
+| `xml` | An object with one key, the root element. An attribute is `@name`. A repeated child is a list. Text beside attributes or children is `#text`. An element with text only is a string. |
+| `form` | An object of the `application/x-www-form-urlencoded` pairs. A repeated key is a list. |
+| `lines` | A list of strings, one per line. |
+| `text` | One string, without the trailing line breaks. |
+
+A named format is a claim. Output that is not in that format fails the run, and a reader shows the start of the output. `auto` is a guess. It never fails: output that no format reads is text.
+
+The attribute belongs to the run and travels with it. A node that inherits a run inherits its format. A node that declares its own run takes the format of that run, and a run that names none is `auto`. A step with its own `<run>` follows the same rule, and a step without one reads the output as the node's run says.
+
+A jq program reads the decoded data, so `jq=` works on rows of CSV exactly as on JSON. Its result is JSON. A reader that prints output unshaped prints the bytes as they arrived, whatever the format.
+
+`testdata/decode.xml` shows each value.
+
 ## Choices
 
 `choices="open,closed,all"` on an `<arg>` or a `<flag>` is the closed set of values the input takes. Every reader enforces it: the command line rejects any other value, and a tool schema publishes the set as an `enum`. A value the caller left out is not checked, so an optional input still falls back to its default. A flag's default must be one of the choices. A bool takes none. Each value of a variadic arg or a `string-slice` flag is checked on its own.
@@ -83,7 +107,7 @@ Element content mixes text with three placeholders:
 - `<if test="path" eq="literal">...<else/>...</if>` branches.
 - `<for each="path">...</for>` repeats, rebinding `.` to each element.
 
-`testdata/` is the tour: `minimal`, `placeholders`, `request`, `transports`, `downloads`, `join-and-poll`, `fields`, `tml`, `watch`, `formats`, `tree`, `group`, `tui`, and `unordered`.
+`testdata/` is the tour.
 
 ## A template attribute has an element form
 

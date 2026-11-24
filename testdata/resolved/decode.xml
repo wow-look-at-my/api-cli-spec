@@ -1,0 +1,42 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!--
+	decode= belongs to the run, so it travels with it. /rows inherits the
+	root's run and the root's format in one piece. A node that declares its own
+	run takes that run's format, and a run that names none carries none: /guess
+	does not keep the root's csv.
+-->
+<resolved config="decode">
+	<command path="/rows" runs="true">
+		<run from="/" kind="request" decode="csv"/>
+	</command>
+	<command path="/open" runs="true">
+		<run from="/open" kind="request" decode="csv"/>
+	</command>
+	<command path="/manifest" runs="true">
+		<run from="/manifest" kind="request" decode="yaml"/>
+	</command>
+	<command path="/feed" runs="true">
+		<run from="/feed" kind="request" decode="xml"/>
+	</command>
+	<command path="/events" runs="true">
+		<run from="/events" kind="request" decode="ndjson"/>
+	</command>
+	<command path="/mounts" runs="true">
+		<run from="/mounts" kind="shell" decode="lines"/>
+	</command>
+	<command path="/users" runs="true">
+		<run from="/users" kind="argv" decode="tsv"/>
+	</command>
+	<command path="/token" runs="true">
+		<run from="/token" kind="shell" decode="text"/>
+	</command>
+	<command path="/guess" runs="true">
+		<run from="/guess" kind="request"/>
+	</command>
+	<command path="/strict" runs="true">
+		<run from="/strict" kind="request" decode="json"/>
+	</command>
+	<command path="/same" runs="true">
+		<run from="/same" kind="request" decode="auto"/>
+	</command>
+</resolved>
