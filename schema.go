@@ -1,3 +1,5 @@
+// schema.go holds Schema.
+
 package spec
 
 import _ "embed"

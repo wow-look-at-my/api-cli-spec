@@ -53,6 +53,11 @@
 				<xs:documentation>The form of that run.</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
+		<xs:attribute name="decode" type="xs:token">
+			<xs:annotation>
+				<xs:documentation>The format that run declares for its output. Absent means "auto".</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
 	</xs:complexType>
 
 	<xs:complexType name="marker">

@@ -208,7 +208,30 @@
 			</xs:element>
 			<xs:group ref="placeholders" maxOccurs="unbounded"/>
 		</xs:choice>
+		<xs:attribute name="decode" type="decode">
+			<xs:annotation>
+				<xs:documentation>The format of the output this run produces. The default is "auto".</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
 	</xs:complexType>
+
+	<xs:simpleType name="decode">
+		<xs:annotation>
+			<xs:documentation>How a reader turns the output of a run into data. "auto" follows the Content-Type of a response. It reads any other output as JSON when the output parses, and as text when it does not. Every other value names one format, and output that is not in that format fails the run.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:token">
+			<xs:enumeration value="auto"/>
+			<xs:enumeration value="json"/>
+			<xs:enumeration value="ndjson"/>
+			<xs:enumeration value="csv"/>
+			<xs:enumeration value="tsv"/>
+			<xs:enumeration value="yaml"/>
+			<xs:enumeration value="xml"/>
+			<xs:enumeration value="form"/>
+			<xs:enumeration value="lines"/>
+			<xs:enumeration value="text"/>
+		</xs:restriction>
+	</xs:simpleType>
 
 	<xs:simpleType name="allowStatus">
 		<xs:annotation>
@@ -285,7 +308,7 @@
 		</xs:all>
 		<xs:attribute name="jq" type="nonEmpty">
 			<xs:annotation>
-				<xs:documentation>A jq program, rendered as a template first. A bare dotted name reads the program from the context.</xs:documentation>
+				<xs:documentation>A jq program, rendered as a template first. A bare dotted name reads the program from the context. The program reads the decoded body, and its result is JSON.</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
 	</xs:complexType>

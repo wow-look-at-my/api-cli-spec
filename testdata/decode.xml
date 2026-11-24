@@ -1,0 +1,94 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- The format of a run's output: declared on the run, inherited with it, and read by jq, fields and steps alike. -->
+<config name="decode">
+	<run decode="csv">
+		<request>
+			<url>https://example.invalid/<value name="entry.path"/></url>
+		</request>
+	</run>
+	<command name="rows" description="A CSV response as a table.">
+		<entry>
+			<path>rows.csv</path>
+		</entry>
+		<fields>
+			<field name="ID">id</field>
+			<field name="NAME">name</field>
+		</fields>
+	</command>
+	<command name="open" description="jq over CSV rows. The result is JSON.">
+		<run decode="csv">
+			<request>
+				<url>https://example.invalid/rows.csv</url>
+				<response jq="map(select(.state == &quot;open&quot;))"/>
+			</request>
+		</run>
+	</command>
+	<command name="manifest" description="A YAML document, one key of it.">
+		<run decode="yaml">
+			<request>
+				<url>https://example.invalid/manifest.yaml</url>
+				<response jq=".spec.containers"/>
+			</request>
+		</run>
+	</command>
+	<command name="feed" description="An XML feed as records.">
+		<run decode="xml">
+			<request>
+				<url>https://example.invalid/feed.xml</url>
+			</request>
+		</run>
+		<fields over="rss.channel.item">
+			<field name="TITLE">title</field>
+			<field name="LINK">link</field>
+		</fields>
+	</command>
+	<command name="events" description="One JSON value per line.">
+		<run decode="ndjson">
+			<request>
+				<url>https://example.invalid/events</url>
+			</request>
+		</run>
+	</command>
+	<command name="mounts" description="A program's output, one record per line.">
+		<run decode="lines">cat /proc/mounts</run>
+	</command>
+	<command name="users" description="A program that prints tab-separated columns.">
+		<run decode="tsv">
+			<argv>report</argv>
+			<argv>--tsv</argv>
+		</run>
+	</command>
+	<command name="token" description="A form-encoded answer, read in a step.">
+		<steps>
+			<step name="grant">
+				<run decode="form">
+					<request method="POST">
+						<url>https://example.invalid/oauth/token</url>
+					</request>
+				</run>
+			</step>
+		</steps>
+		<run decode="text">echo <value name="result.grant.access_token"/></run>
+	</command>
+	<command name="guess" description="No declaration: the reader follows the Content-Type.">
+		<run>
+			<request>
+				<url>https://example.invalid/anything</url>
+			</request>
+		</run>
+	</command>
+	<command name="strict" description="JSON or nothing: a login page fails the run.">
+		<run decode="json">
+			<request>
+				<url>https://example.invalid/api</url>
+			</request>
+		</run>
+	</command>
+	<command name="same" description="The default, written out.">
+		<run decode="auto">
+			<request>
+				<url>https://example.invalid/api</url>
+			</request>
+		</run>
+	</command>
+</config>

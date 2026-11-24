@@ -1,3 +1,5 @@
+// resolved.go holds ParseResolved.
+
 package spec
 
 import (
@@ -64,7 +66,8 @@ func parseCommand(node *validator.Element) (Command, error) {
 			if !ok {
 				return Command{}, fmt.Errorf("%s: <run> declares no kind=", path)
 			}
-			cmd.Run = &Run{From: from, Kind: kind}
+			decode, _ := child.Attr("decode")
+			cmd.Run = &Run{From: from, Kind: kind, Decode: decode}
 		case "cwd":
 			cmd.Cwd = &Setting{From: from, Value: child.TextContent()}
 		case "stdin":

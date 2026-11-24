@@ -19,10 +19,12 @@ type Setting struct {
 	Value string
 }
 
-// A Run is the effective run: where it was declared, and what kind it is.
+// A Run is the effective run: where it was declared, what kind it is, and the
+// format it declares for its output. An empty Decode means "auto".
 type Run struct {
-	From string
-	Kind string
+	From   string
+	Kind   string
+	Decode string
 }
 
 // A Command is a node of the tree, with every setting resolved.
@@ -35,8 +37,7 @@ type Command struct {
 	Confirm *Setting
 	Format  *Setting
 	Watch   *Setting
-	// Preconditions accumulate instead of overriding, so this is every guard the
-	// node runs, ancestors earliest, rather than a winning value.
+	// Preconditions accumulate instead of overriding.
 	Preconditions []Setting
 }
 
@@ -71,8 +72,7 @@ func Resolve(doc *validator.Document) (*Resolved, error) {
 	}
 
 	out := &Resolved{Config: name}
-	// The root is an ancestor of every top-level command, so its own
-	// declarations resolve at the path "/".
+	// The root is an ancestor of every top-level command, so its own declarations resolve at the path "/".
 	inherited := declarations(root, "/", settings{})
 	for _, child := range root.ChildElements() {
 		if child.Local != "command" {
@@ -129,7 +129,8 @@ func declarations(node *validator.Element, path string, inherited settings) sett
 	for _, child := range node.ChildElements() {
 		switch child.Local {
 		case "run":
-			out.run = &Run{From: path, Kind: runKind(child)}
+			decode, _ := child.Attr("decode")
+			out.run = &Run{From: path, Kind: runKind(child), Decode: decode}
 		case "cwd":
 			out.cwd = &Setting{From: path, Value: strings.TrimSpace(child.TextContent())}
 		case "stdin":
@@ -139,8 +140,7 @@ func declarations(node *validator.Element, path string, inherited settings) sett
 		case "format":
 			out.format = &Setting{From: path}
 		case "preconditions":
-			// A guard adds to what the ancestors declared. A fresh slice holds the
-			// result, so a sibling's guards never reach another's.
+			// A guard adds to what the ancestors declared.
 			declared := children(child, "precondition")
 			next := make([]Setting, 0, len(out.pre)+len(declared))
 			next = append(next, out.pre...)
