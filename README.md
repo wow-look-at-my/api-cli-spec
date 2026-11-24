@@ -76,7 +76,14 @@ Under `auto`, these media types name a format. A reader compares the type withou
 |---|---|
 | `text/csv`, `application/csv` | `csv` |
 | `text/tab-separated-values` | `tsv` |
-| `application/xml`, `text/xml`, and any type that ends in `+xml` | `xml` |
+| `application/x-ndjson`, `application/ndjson` | `ndjson` |
+| `application/jsonl`, `application/jsonlines` | `ndjson` |
+| `application/x-jsonlines` | `ndjson` |
+| `application/yaml`, `text/yaml` | `yaml` |
+| `application/x-yaml`, `text/x-yaml` | `yaml` |
+| a type that ends in `+yaml` | `yaml` |
+| `application/xml`, `text/xml` | `xml` |
+| a type that ends in `+xml` | `xml` |
 | `application/x-www-form-urlencoded` | `form` |
 
 Every other type takes the second rule of `auto`, and so does a body that does not read as its type says.
